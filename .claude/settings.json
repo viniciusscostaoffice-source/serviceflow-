@@ -1,0 +1,22 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm run *)",
+      "Bash(ls \"c:\\\\Users\\\\Administrador\\\\Downloads\\\\\")",
+      "Read(//c/Users/Administrador/**)",
+      "Bash(ls /mnt/c/Users/Administrador/Downloads/)",
+      "Read(//mnt/c/Users/Administrador/**)",
+      "PowerShell(ls \"C:\\\\Users\\\\Administrador\\\\Downloads\\\\MECANICO APP\\\\\")",
+      "PowerShell(ls \"C:\\\\Users\\\\Administrador\\\\Downloads\\\\MECANICO APP\\\\app\\\\\" -Recurse)",
+      "PowerShell(head -50)",
+      "PowerShell(Move-Item \"C:\\\\Users\\\\Administrador\\\\Downloads\\\\MECANICO APP\\\\app\\\\\\(app\\)\\\\page.tsx\" \"C:\\\\Users\\\\Administrador\\\\Downloads\\\\MECANICO APP\\\\app\\\\\\(app\\)\\\\inicio\\\\page.tsx\" -Force)",
+      "PowerShell(New-Item -ItemType Directory -Path \"C:\\\\Users\\\\Administrador\\\\Downloads\\\\MECANICO APP\\\\app\\\\\\(app\\)\\\\inicio\" -Force)"
+    ],
+    "additionalDirectories": [
+      "C:\\Users\\Administrador\\Downloads\\MECANICO APP\\app",
+      "C:\\Users\\Administrador\\Downloads\\MECANICO APP\\lib",
+      "C:\\Users\\Administrador\\Downloads\\MECANICO APP\\components",
+      "C:\\Users\\Administrador\\Downloads\\MECANICO APP"
+    ]
+  }
+}
