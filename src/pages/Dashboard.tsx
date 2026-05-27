@@ -86,7 +86,9 @@ export function Dashboard() {
       {/* Header */}
       <header className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
         <div>
-          <h1 className="font-display text-4xl uppercase text-secondary">Olá, João!</h1>
+          <h1 className="font-display text-4xl uppercase text-secondary">
+            Olá, {(localStorage.getItem('sf_usuario') || 'Gerente').split(' ')[0]}!
+          </h1>
           <p className="text-gray-500 font-medium capitalize mt-1">Hoje é {today}</p>
         </div>
 
