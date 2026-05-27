@@ -21,6 +21,7 @@ export function Login() {
       navigate('/dashboard');
       setLoading(false);
     }, 1000);
+    // TODO: após Supabase Auth, salvar nome da oficina no localStorage aqui
   };
 
   return (

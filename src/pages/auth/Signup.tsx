@@ -13,8 +13,13 @@ export function Signup() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
+    const form = e.target as HTMLFormElement;
+    const oficina = (form.elements.namedItem('oficina') as HTMLInputElement).value;
+    const nome = (form.elements.namedItem('nome') as HTMLInputElement).value;
     // TODO: Connect to Supabase Auth -> Insert user -> Insert oficina
     setTimeout(() => {
+      localStorage.setItem('sf_oficina', oficina);
+      localStorage.setItem('sf_usuario', nome);
       toast.success('Conta criada com sucesso!');
       navigate('/onboarding');
       setLoading(false);
@@ -46,7 +51,7 @@ export function Signup() {
           <form className="space-y-4" onSubmit={handleSubmit}>
             <div className="space-y-2">
               <Label htmlFor="nome">Seu Nome (Dono/Gerente)</Label>
-              <Input id="nome" required placeholder="João da Silva" />
+              <Input id="nome" name="nome" required placeholder="João da Silva" />
             </div>
 
             <div className="space-y-2">
@@ -61,7 +66,7 @@ export function Signup() {
 
             <div className="space-y-2">
               <Label htmlFor="oficina">Nome da Oficina</Label>
-              <Input id="oficina" required placeholder="Auto Center Silva" />
+              <Input id="oficina" name="oficina" required placeholder="Auto Center Silva" />
             </div>
 
             <div className="grid grid-cols-2 gap-4">

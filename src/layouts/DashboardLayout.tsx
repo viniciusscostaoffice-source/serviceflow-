@@ -33,8 +33,13 @@ export function DashboardLayout() {
   const location = useLocation();
   const navigate = useNavigate();
   const { pendenciasAtivas, loading } = useAppContext();
+  const nomeOficina = localStorage.getItem('sf_oficina') || 'Minha Oficina';
+  const nomeUsuario = localStorage.getItem('sf_usuario') || 'Usuário';
+  const iniciaisUsuario = nomeUsuario.split(' ').map(n => n[0]).slice(0, 2).join('').toUpperCase();
 
   function handleLogout() {
+    localStorage.removeItem('sf_oficina');
+    localStorage.removeItem('sf_usuario');
     toast.success('Sessão encerrada. Até logo!');
     setTimeout(() => navigate('/login'), 800);
   }
@@ -121,7 +126,7 @@ export function DashboardLayout() {
           </button>
 
           <div className="font-medium text-sm md:text-base truncate hidden lg:block shrink-0">
-            Oficina do João
+            {nomeOficina}
           </div>
 
           <div className="flex-1 max-w-md ml-auto lg:ml-8 relative">
@@ -139,11 +144,11 @@ export function DashboardLayout() {
 
           <div className="ml-auto flex items-center gap-4 shrink-0">
             <div className="text-right hidden sm:block">
-              <div className="text-sm font-medium leading-tight">João Silva</div>
+              <div className="text-sm font-medium leading-tight">{nomeUsuario}</div>
               <div className="text-xs text-gray-500">Gerente</div>
             </div>
             <div className="h-9 w-9 bg-primary/10 text-primary rounded-full flex items-center justify-center font-bold text-sm">
-              JS
+              {iniciaisUsuario}
             </div>
           </div>
         </header>
