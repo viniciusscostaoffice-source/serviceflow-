@@ -1,13 +1,12 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Button } from '../../components/ui/button';
-import { Input } from '../../components/ui/input';
-import { Label } from '../../components/ui/label';
-import { Wrench, Loader2 } from 'lucide-react';
+import { Wrench, Loader2, Eye, EyeOff, ArrowRight, CheckCircle2 } from 'lucide-react';
 import { toast } from 'sonner';
+import { motion } from 'motion/react';
 
 export function Signup() {
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -16,7 +15,6 @@ export function Signup() {
     const form = e.target as HTMLFormElement;
     const oficina = (form.elements.namedItem('oficina') as HTMLInputElement).value;
     const nome = (form.elements.namedItem('nome') as HTMLInputElement).value;
-    // TODO: Connect to Supabase Auth -> Insert user -> Insert oficina
     setTimeout(() => {
       localStorage.setItem('sf_oficina', oficina);
       localStorage.setItem('sf_usuario', nome);
@@ -26,72 +24,223 @@ export function Signup() {
     }, 1500);
   };
 
+  const beneficios = [
+    'Controle de comissões em tempo real',
+    'App exclusivo para seus mecânicos',
+    'Fechamento mensal automatizado',
+    '14 dias grátis, sem cartão',
+  ];
+
   return (
-    <div className="min-h-screen bg-[#F5F5F0] flex flex-col justify-center px-4 sm:px-6 lg:px-8 py-12">
-      <div className="sm:mx-auto sm:w-full sm:max-w-md">
-        <Link to="/" className="flex justify-center items-center gap-2 mb-8">
-          <Wrench className="text-primary w-8 h-8" />
-          <h2 className="font-display text-3xl tracking-widest uppercase text-secondary">
-            Service<span className="text-primary">Flow</span>
-          </h2>
+    <div className="min-h-screen flex">
+      {/* Lado esquerdo — escuro */}
+      <div className="hidden lg:flex lg:w-[42%] bg-[#0A0A0A] flex-col justify-between p-12 relative overflow-hidden shrink-0">
+        <div
+          className="absolute inset-0 opacity-[0.04]"
+          style={{
+            backgroundImage:
+              'linear-gradient(#FF6B1A 1px, transparent 1px), linear-gradient(90deg, #FF6B1A 1px, transparent 1px)',
+            backgroundSize: '40px 40px',
+          }}
+        />
+        <div className="absolute top-0 right-0 w-[400px] h-[400px] bg-[#FF6B1A] rounded-full opacity-10 blur-[120px] pointer-events-none" />
+
+        <Link to="/" className="flex items-center gap-3 z-10">
+          <div className="w-10 h-10 bg-[#FF6B1A] rounded-lg flex items-center justify-center">
+            <Wrench size={22} className="text-white" />
+          </div>
+          <span className="font-display text-2xl tracking-widest uppercase text-white">
+            Service<span className="text-[#FF6B1A]">Flow</span>
+          </span>
         </Link>
-        <h2 className="text-center text-2xl font-bold tracking-tight text-gray-900 mb-2">
-          Crie sua conta
-        </h2>
-        <p className="text-center text-sm text-gray-600 mb-8">
-          Já tem conta?{' '}
-          <Link to="/login" className="font-medium text-primary hover:text-[#E55A15] transition-colors">
-            Faça login aqui
-          </Link>
-        </p>
+
+        <div className="z-10 space-y-8">
+          <div>
+            <p className="text-[#FF6B1A] text-xs font-bold uppercase tracking-widest mb-3">Por que escolher o ServiceFlow?</p>
+            <h2 className="font-display text-4xl xl:text-5xl text-white uppercase leading-none">
+              Sua oficina<br />
+              <span className="text-[#FF6B1A]">organizada</span><br />
+              de verdade.
+            </h2>
+          </div>
+
+          <ul className="space-y-3">
+            {beneficios.map((b) => (
+              <li key={b} className="flex items-start gap-3">
+                <CheckCircle2 size={18} className="text-[#FF6B1A] mt-0.5 shrink-0" />
+                <span className="text-gray-300 text-sm">{b}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+
+        <div className="z-10 bg-white/5 border border-white/10 rounded-2xl p-5">
+          <p className="text-gray-300 text-sm italic leading-relaxed">
+            "Antes eu perdia horas calculando comissão na planilha. Agora é tudo automático e meus mecânicos confiam nos números."
+          </p>
+          <div className="flex items-center gap-3 mt-4">
+            <div className="w-9 h-9 rounded-full bg-[#FF6B1A]/20 flex items-center justify-center text-xs font-bold text-[#FF6B1A]">
+              MR
+            </div>
+            <div>
+              <p className="text-white text-xs font-semibold">Marcos Ribeiro</p>
+              <p className="text-gray-500 text-xs">Dono — Auto Mecânica Ribeiro, SP</p>
+            </div>
+          </div>
+        </div>
       </div>
 
-      <div className="sm:mx-auto sm:w-full sm:max-w-md">
-        <div className="bg-white py-8 px-4 shadow-xl border border-gray-100 sm:rounded-xl sm:px-10">
-          <form className="space-y-4" onSubmit={handleSubmit}>
-            <div className="space-y-2">
-              <Label htmlFor="nome">Seu Nome (Dono/Gerente)</Label>
-              <Input id="nome" name="nome" required placeholder="João da Silva" />
-            </div>
+      {/* Lado direito — formulário */}
+      <div className="flex-1 flex flex-col justify-center items-center px-6 py-12 bg-[#F5F5F0] overflow-y-auto">
+        {/* Logo mobile */}
+        <Link to="/" className="flex lg:hidden items-center gap-2 mb-10">
+          <div className="w-8 h-8 bg-[#FF6B1A] rounded-lg flex items-center justify-center">
+            <Wrench size={18} className="text-white" />
+          </div>
+          <span className="font-display text-2xl tracking-widest uppercase text-[#0A0A0A]">
+            Service<span className="text-[#FF6B1A]">Flow</span>
+          </span>
+        </Link>
 
-            <div className="space-y-2">
-              <Label htmlFor="email">E-mail</Label>
-              <Input id="email" type="email" required placeholder="seu@email.com" />
-            </div>
+        <motion.div
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4 }}
+          className="w-full max-w-md"
+        >
+          <div className="mb-7">
+            <h2 className="text-3xl font-bold text-[#0A0A0A] mb-1.5">Crie sua conta grátis</h2>
+            <p className="text-gray-500 text-sm">
+              Já tem conta?{' '}
+              <Link to="/login" className="text-[#FF6B1A] font-semibold hover:underline">
+                Faça login aqui
+              </Link>
+            </p>
+          </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="password">Senha</Label>
-              <Input id="password" type="password" required />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="oficina">Nome da Oficina</Label>
-              <Input id="oficina" name="oficina" required placeholder="Auto Center Silva" />
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="cidade">Cidade</Label>
-                <Input id="cidade" required placeholder="São Paulo" />
+          <form onSubmit={handleSubmit} className="space-y-4">
+            {/* Nome + Oficina na mesma linha */}
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <label className="text-xs font-semibold text-[#0A0A0A] uppercase tracking-wide" htmlFor="nome">
+                  Seu Nome
+                </label>
+                <input
+                  id="nome"
+                  name="nome"
+                  required
+                  placeholder="João Silva"
+                  className="w-full h-12 px-4 rounded-xl border-2 border-gray-200 bg-white text-[#0A0A0A] placeholder-gray-400 text-sm focus:outline-none focus:border-[#FF6B1A] transition-colors"
+                />
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="estado">Estado</Label>
-                <Input id="estado" required placeholder="SP" maxLength={2} />
+              <div className="space-y-1.5">
+                <label className="text-xs font-semibold text-[#0A0A0A] uppercase tracking-wide" htmlFor="oficina">
+                  Nome da Oficina
+                </label>
+                <input
+                  id="oficina"
+                  name="oficina"
+                  required
+                  placeholder="Auto Center Silva"
+                  className="w-full h-12 px-4 rounded-xl border-2 border-gray-200 bg-white text-[#0A0A0A] placeholder-gray-400 text-sm focus:outline-none focus:border-[#FF6B1A] transition-colors"
+                />
               </div>
             </div>
 
-            <Button type="submit" className="w-full bg-primary hover:bg-[#E55A15] text-white font-bold uppercase tracking-wider mt-4" disabled={loading}>
+            {/* E-mail */}
+            <div className="space-y-1.5">
+              <label className="text-xs font-semibold text-[#0A0A0A] uppercase tracking-wide" htmlFor="email">
+                E-mail
+              </label>
+              <input
+                id="email"
+                type="email"
+                required
+                placeholder="seu@email.com"
+                className="w-full h-12 px-4 rounded-xl border-2 border-gray-200 bg-white text-[#0A0A0A] placeholder-gray-400 text-sm focus:outline-none focus:border-[#FF6B1A] transition-colors"
+              />
+            </div>
+
+            {/* Senha */}
+            <div className="space-y-1.5">
+              <label className="text-xs font-semibold text-[#0A0A0A] uppercase tracking-wide" htmlFor="password">
+                Senha
+              </label>
+              <div className="relative">
+                <input
+                  id="password"
+                  type={showPassword ? 'text' : 'password'}
+                  required
+                  placeholder="Mínimo 8 caracteres"
+                  minLength={8}
+                  className="w-full h-12 px-4 pr-12 rounded-xl border-2 border-gray-200 bg-white text-[#0A0A0A] placeholder-gray-400 text-sm focus:outline-none focus:border-[#FF6B1A] transition-colors"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(v => !v)}
+                  className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                  tabIndex={-1}
+                >
+                  {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                </button>
+              </div>
+            </div>
+
+            {/* Cidade + Estado */}
+            <div className="grid grid-cols-3 gap-3">
+              <div className="col-span-2 space-y-1.5">
+                <label className="text-xs font-semibold text-[#0A0A0A] uppercase tracking-wide" htmlFor="cidade">
+                  Cidade
+                </label>
+                <input
+                  id="cidade"
+                  required
+                  placeholder="São Paulo"
+                  className="w-full h-12 px-4 rounded-xl border-2 border-gray-200 bg-white text-[#0A0A0A] placeholder-gray-400 text-sm focus:outline-none focus:border-[#FF6B1A] transition-colors"
+                />
+              </div>
+              <div className="space-y-1.5">
+                <label className="text-xs font-semibold text-[#0A0A0A] uppercase tracking-wide" htmlFor="estado">
+                  UF
+                </label>
+                <input
+                  id="estado"
+                  required
+                  placeholder="SP"
+                  maxLength={2}
+                  className="w-full h-12 px-4 rounded-xl border-2 border-gray-200 bg-white text-[#0A0A0A] placeholder-gray-400 text-sm focus:outline-none focus:border-[#FF6B1A] transition-colors uppercase"
+                />
+              </div>
+            </div>
+
+            {/* Termos */}
+            <p className="text-xs text-gray-400 leading-relaxed">
+              Ao cadastrar, você concorda com nossos{' '}
+              <a href="#" className="text-[#FF6B1A] hover:underline">Termos de Uso</a>{' '}
+              e{' '}
+              <a href="#" className="text-[#FF6B1A] hover:underline">Política de Privacidade</a>.
+            </p>
+
+            {/* Botão */}
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full bg-[#FF6B1A] hover:bg-[#E55A15] disabled:opacity-60 text-white font-bold uppercase tracking-widest text-sm rounded-xl flex items-center justify-center gap-2 transition-colors py-3.5"
+            >
               {loading ? (
                 <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Criando conta...
+                  <Loader2 size={18} className="animate-spin" />
+                  Criando sua conta...
                 </>
               ) : (
-                'Cadastrar e Começar'
+                <>
+                  Começar grátis por 14 dias
+                  <ArrowRight size={18} />
+                </>
               )}
-            </Button>
+            </button>
           </form>
-        </div>
+        </motion.div>
       </div>
     </div>
   );
