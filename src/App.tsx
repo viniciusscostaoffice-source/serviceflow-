@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { Landing } from './pages/Landing';
 import { DashboardLayout } from './layouts/DashboardLayout';
 import { Dashboard } from './pages/Dashboard';
@@ -31,15 +31,14 @@ export default function App() {
     <TooltipProvider>
       <BrowserRouter>
         <Routes>
-          <Route path="/landing" element={<Landing />} />
-          
+          <Route path="/" element={<Landing />} />
+
           <Route path="/login" element={<Login />} />
           <Route path="/signup" element={<Signup />} />
           <Route path="/onboarding" element={<Onboarding />} />
-          
+
           {/* Dashboard routes */}
           <Route element={<DashboardLayout />}>
-            <Route path="/" element={<Navigate to="/dashboard" replace />} />
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/os" element={<OrdensServico />} />
             <Route path="/os/nova" element={<OsNova />} />
