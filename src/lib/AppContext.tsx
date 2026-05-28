@@ -25,6 +25,8 @@ interface AppContextValue {
   resolverPendencia: (id: number) => void;
   descartarPendencia: (id: number) => void;
   atualizarComissao: (mecanicoId: number, novaComissao: number) => void;
+  atualizarTelefone: (mecanicoId: number, fone: string) => Promise<void>;
+  excluirMecanico: (mecanicoId: number) => Promise<void>;
   adicionarMecanico: (nome: string, fone: string, comissaoPadrao: number) => Promise<void>;
   adicionarOS: (input: NovaOSInput) => Promise<void>;
   editarOS: (id: number, maoDeObra: number, pecas: number, motivo: string, mecanicoId: number, comissaoPadrao: number) => Promise<void>;
@@ -137,6 +139,16 @@ export function AppProvider({ children }: { children: ReactNode }) {
     );
   }, []);
 
+  const atualizarTelefone = useCallback(async (mecanicoId: number, fone: string) => {
+    await supabase.from('mecanicos').update({ fone }).eq('id', mecanicoId);
+    setMecanicos((prev) => prev.map((m) => (m.id === mecanicoId ? { ...m, fone } : m)));
+  }, []);
+
+  const excluirMecanico = useCallback(async (mecanicoId: number) => {
+    await supabase.from('mecanicos').delete().eq('id', mecanicoId);
+    setMecanicos((prev) => prev.filter((m) => m.id !== mecanicoId));
+  }, []);
+
   const adicionarMecanico = useCallback(async (nome: string, fone: string, comissaoPadrao: number) => {
     await supabase.from('mecanicos').insert({ nome, fone, comissao_padrao: comissaoPadrao, status: 'Ativo' });
     await carregar();
@@ -204,6 +216,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     <AppContext.Provider value={{
       ordens, pendencias, mecanicos, loading,
       resolverPendencia, descartarPendencia, atualizarComissao,
+      atualizarTelefone, excluirMecanico,
       adicionarMecanico, adicionarOS, editarOS,
       pendenciasAtivas, recarregar: carregar,
     }}>

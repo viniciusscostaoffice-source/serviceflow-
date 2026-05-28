@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../co
 import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from '../components/ui/dialog';
-import { Plus, Search, Phone, ChevronRight, Check, Pencil, X } from 'lucide-react';
+import { Plus, Search, Phone, ChevronRight, Check, Pencil, X, Trash2, MessageCircle } from 'lucide-react';
 import { toast } from 'sonner';
 import { useAppContext } from '../lib/AppContext';
 
@@ -78,22 +78,84 @@ function ComissaoInline({ mecId, value, onSave }: { mecId: number; value: number
       title="Clique para editar a comissão"
     >
       <span className="text-2xl font-display text-secondary">{value}%</span>
-      <Pencil
-        size={13}
-        className="text-gray-300 group-hover/edit:text-primary transition-colors"
-      />
+      <Pencil size={13} className="text-gray-300 group-hover/edit:text-primary transition-colors" />
+    </button>
+  );
+}
+
+function TelefoneInline({ mecId, value, onSave }: { mecId: number; value: string; onSave: (id: number, fone: string) => Promise<void> }) {
+  const [editing, setEditing] = useState(false);
+  const [draft, setDraft] = useState(value);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  function startEdit(e: React.MouseEvent) {
+    e.preventDefault();
+    setDraft(value);
+    setEditing(true);
+    setTimeout(() => inputRef.current?.select(), 0);
+  }
+
+  async function confirm(e: React.MouseEvent) {
+    e.preventDefault();
+    await onSave(mecId, draft);
+    setEditing(false);
+    toast.success('Telefone atualizado!');
+  }
+
+  function cancel(e: React.MouseEvent) {
+    e.preventDefault();
+    setDraft(value);
+    setEditing(false);
+  }
+
+  function handleKey(e: React.KeyboardEvent) {
+    if (e.key === 'Enter') { onSave(mecId, draft); setEditing(false); toast.success('Telefone atualizado!'); }
+    if (e.key === 'Escape') { setDraft(value); setEditing(false); }
+  }
+
+  if (editing) {
+    return (
+      <div className="flex items-center gap-1" onClick={e => e.preventDefault()}>
+        <Input
+          ref={inputRef}
+          value={draft}
+          onChange={e => setDraft(e.target.value)}
+          onKeyDown={handleKey}
+          className="h-7 w-36 text-sm p-1"
+          placeholder="Ex: 11999998888"
+        />
+        <button onClick={confirm} className="h-6 w-6 rounded-full bg-green-500 text-white flex items-center justify-center hover:bg-green-600">
+          <Check size={12} />
+        </button>
+        <button onClick={cancel} className="h-6 w-6 rounded-full bg-gray-200 text-gray-500 flex items-center justify-center hover:bg-gray-300">
+          <X size={12} />
+        </button>
+      </div>
+    );
+  }
+
+  return (
+    <button
+      onClick={startEdit}
+      className="flex items-center gap-1 group/tel text-gray-500 hover:text-primary transition-colors"
+      title="Clique para editar o telefone"
+    >
+      <Phone size={13} />
+      <span className="text-sm">{value || 'Sem telefone'}</span>
+      <Pencil size={11} className="text-gray-300 group-hover/tel:text-primary transition-colors" />
     </button>
   );
 }
 
 export function Mecanicos() {
-  const { mecanicos, atualizarComissao, ordens, adicionarMecanico } = useAppContext();
+  const { mecanicos, atualizarComissao, atualizarTelefone, excluirMecanico, ordens, adicionarMecanico } = useAppContext();
   const [isInviteOpen, setIsInviteOpen] = useState(false);
   const [invitePhone, setInvitePhone] = useState('');
   const [inviteName, setInviteName] = useState('');
   const [inviteComissao, setInviteComissao] = useState('15');
   const [saving, setSaving] = useState(false);
   const [search, setSearch] = useState('');
+  const [confirmExcluir, setConfirmExcluir] = useState<number | null>(null);
 
   const now = new Date();
   const mes = now.getMonth() + 1;
@@ -113,7 +175,6 @@ export function Mecanicos() {
     setSaving(true);
     try {
       await adicionarMecanico(inviteName, invitePhone, comissao);
-      // Abre WhatsApp com mensagem de boas-vindas
       const msg = encodeURIComponent(`Olá ${inviteName}! Você foi adicionado à equipe no ServiceFlow. Acesse o sistema para acompanhar suas ordens e comissões.`);
       const phone = invitePhone.replace(/\D/g, '');
       window.open(`https://wa.me/55${phone}?text=${msg}`, '_blank');
@@ -129,15 +190,23 @@ export function Mecanicos() {
     }
   }
 
+  async function handleExcluir(mecId: number) {
+    await excluirMecanico(mecId);
+    setConfirmExcluir(null);
+    toast.success('Mecânico removido.');
+  }
+
+  function enviarLinkWhatsApp(mec: { nome: string; fone: string }) {
+    const phone = mec.fone.replace(/\D/g, '');
+    if (!phone) { toast.error('Este mecânico não tem telefone cadastrado.'); return; }
+    const msg = encodeURIComponent(`Olá ${mec.nome}! Acesse o ServiceFlow para acompanhar suas ordens de serviço e comissões.`);
+    window.open(`https://wa.me/55${phone}?text=${msg}`, '_blank');
+  }
+
   function osMes(mecId: number) {
     return ordens.filter((os) => {
       const d = new Date(os.data);
-      return (
-        os.mecanicoId === mecId &&
-        d.getFullYear() === ano &&
-        d.getMonth() + 1 === mes &&
-        os.status !== 'cancelada'
-      );
+      return os.mecanicoId === mecId && d.getFullYear() === ano && d.getMonth() + 1 === mes && os.status !== 'cancelada';
     }).length;
   }
 
@@ -145,12 +214,7 @@ export function Mecanicos() {
     return ordens
       .filter((os) => {
         const d = new Date(os.data);
-        return (
-          os.mecanicoId === mecId &&
-          d.getFullYear() === ano &&
-          d.getMonth() + 1 === mes &&
-          os.status !== 'cancelada'
-        );
+        return os.mecanicoId === mecId && d.getFullYear() === ano && d.getMonth() + 1 === mes && os.status !== 'cancelada';
       })
       .reduce((s, os) => s + os.comissao, 0);
   }
@@ -213,34 +277,62 @@ export function Mecanicos() {
         {filtered.map((mec) => (
           <Card key={mec.id} className="hover:shadow-lg transition-all hover:border-primary/40 h-full flex flex-col">
             <CardHeader className="pb-2 flex flex-row items-start justify-between">
-              <div>
+              <div className="space-y-1">
                 <CardTitle className="text-lg">{mec.nome}</CardTitle>
-                <CardDescription className="flex items-center gap-1 mt-1">
-                  <Phone size={13} /> {mec.fone}
+                <CardDescription>
+                  <TelefoneInline mecId={mec.id} value={mec.fone ?? ''} onSave={atualizarTelefone} />
                 </CardDescription>
               </div>
-              <div className="h-10 w-10 bg-primary/10 text-primary rounded-full flex items-center justify-center font-bold text-base shrink-0">
-                {mec.nome.charAt(0)}
+              <div className="flex items-center gap-1">
+                {/* WhatsApp */}
+                <button
+                  onClick={() => enviarLinkWhatsApp(mec)}
+                  title="Enviar link via WhatsApp"
+                  className="h-8 w-8 rounded-lg flex items-center justify-center text-green-500 hover:bg-green-50 transition-colors"
+                >
+                  <MessageCircle size={17} />
+                </button>
+                {/* Excluir */}
+                {confirmExcluir === mec.id ? (
+                  <div className="flex items-center gap-1">
+                    <button
+                      onClick={() => handleExcluir(mec.id)}
+                      className="h-7 px-2 rounded bg-red-500 text-white text-xs font-bold hover:bg-red-600"
+                    >
+                      Confirmar
+                    </button>
+                    <button
+                      onClick={() => setConfirmExcluir(null)}
+                      className="h-7 px-2 rounded bg-gray-100 text-gray-500 text-xs hover:bg-gray-200"
+                    >
+                      Não
+                    </button>
+                  </div>
+                ) : (
+                  <button
+                    onClick={() => setConfirmExcluir(mec.id)}
+                    title="Excluir mecânico"
+                    className="h-8 w-8 rounded-lg flex items-center justify-center text-gray-300 hover:text-red-500 hover:bg-red-50 transition-colors"
+                  >
+                    <Trash2 size={16} />
+                  </button>
+                )}
+                {/* Avatar */}
+                <div className="h-10 w-10 bg-primary/10 text-primary rounded-full flex items-center justify-center font-bold text-base shrink-0 ml-1">
+                  {mec.nome.charAt(0)}
+                </div>
               </div>
             </CardHeader>
 
             <CardContent className="flex-1 flex flex-col pt-2">
-              {/* Comissão editável inline */}
               <div className="bg-gray-50 rounded-xl p-4 mb-4">
-                <p className="text-xs text-gray-400 uppercase font-bold tracking-wider mb-2">
-                  Comissão Padrão
-                </p>
-                <ComissaoInline
-                  mecId={mec.id}
-                  value={mec.comissaoPadrao}
-                  onSave={atualizarComissao}
-                />
+                <p className="text-xs text-gray-400 uppercase font-bold tracking-wider mb-2">Comissão Padrão</p>
+                <ComissaoInline mecId={mec.id} value={mec.comissaoPadrao} onSave={atualizarComissao} />
                 <p className="text-[11px] text-gray-400 mt-1">
                   Clique no valor para editar · Enter para salvar · Esc para cancelar
                 </p>
               </div>
 
-              {/* Stats do mês */}
               <div className="grid grid-cols-2 gap-3 mb-4">
                 <div className="text-center bg-white border border-gray-100 rounded-lg py-2">
                   <p className="text-xs text-gray-400 uppercase font-bold">OSs (mês)</p>
@@ -254,7 +346,6 @@ export function Mecanicos() {
                 </div>
               </div>
 
-              {/* Link para detalhe */}
               <Link
                 to={`/mecanicos/${mec.id}`}
                 className="mt-auto flex items-center justify-between text-sm font-medium text-gray-500 hover:text-primary transition-colors pt-3 border-t"
