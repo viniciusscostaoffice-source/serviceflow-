@@ -2,6 +2,21 @@ import { createContext, useContext, useState, useCallback, useEffect, type React
 import { supabase } from './supabase';
 import type { OS, Mecanico, Pendencia } from './mockData';
 
+export interface NovaOSInput {
+  cliente: string;
+  veiculo: string;
+  placa: string;
+  descricao: string;
+  totalMaoObra: number;
+  totalPecas: number;
+  mecanicoId: number;
+  ajudanteId: number | null;
+  percentualAjudante: number;
+  comissao: number;
+  comissaoMecanico: number;
+  comissaoAjudante: number;
+}
+
 interface AppContextValue {
   ordens: OS[];
   pendencias: Pendencia[];
@@ -10,6 +25,9 @@ interface AppContextValue {
   resolverPendencia: (id: number) => void;
   descartarPendencia: (id: number) => void;
   atualizarComissao: (mecanicoId: number, novaComissao: number) => void;
+  adicionarMecanico: (nome: string, fone: string, comissaoPadrao: number) => Promise<void>;
+  adicionarOS: (input: NovaOSInput) => Promise<void>;
+  editarOS: (id: number, maoDeObra: number, pecas: number, motivo: string, mecanicoId: number, comissaoPadrao: number) => Promise<void>;
   pendenciasAtivas: number;
   recarregar: () => void;
 }
@@ -119,12 +137,74 @@ export function AppProvider({ children }: { children: ReactNode }) {
     );
   }, []);
 
+  const adicionarMecanico = useCallback(async (nome: string, fone: string, comissaoPadrao: number) => {
+    await supabase.from('mecanicos').insert({ nome, fone, comissao_padrao: comissaoPadrao, status: 'Ativo' });
+    await carregar();
+  }, []);
+
+  const adicionarOS = useCallback(async (input: NovaOSInput) => {
+    await supabase.from('ordens_servico').insert({
+      cliente:             input.cliente,
+      veiculo:             input.veiculo,
+      placa:               input.placa,
+      descricao:           input.descricao,
+      total_mao_obra:      input.totalMaoObra,
+      total_pecas:         input.totalPecas,
+      mecanico_id:         input.mecanicoId,
+      ajudante_id:         input.ajudanteId,
+      percentual_ajudante: input.percentualAjudante,
+      comissao:            input.comissao,
+      comissao_mecanico:   input.comissaoMecanico,
+      comissao_ajudante:   input.comissaoAjudante,
+      status:              'aberta',
+      data:                new Date().toISOString().slice(0, 10),
+    });
+    await carregar();
+  }, []);
+
+  const editarOS = useCallback(async (
+    id: number,
+    maoDeObra: number,
+    pecas: number,
+    motivo: string,
+    mecanicoId: number,
+    comissaoPadrao: number,
+  ) => {
+    const comissao         = (maoDeObra * comissaoPadrao) / 100;
+    const comissaoMecanico = comissao;
+    const comissaoAjudante = 0;
+
+    await supabase.from('ordens_servico').update({
+      total_mao_obra:    maoDeObra,
+      total_pecas:       pecas,
+      comissao,
+      comissao_mecanico: comissaoMecanico,
+      comissao_ajudante: comissaoAjudante,
+    }).eq('id', id);
+
+    await supabase.from('edicoes_os').insert({
+      os_id:  id,
+      motivo,
+    });
+
+    await supabase.from('pendencias').insert({
+      os_id:     id,
+      tipo:      'Edição de Valor',
+      descricao: motivo,
+      severidade: 'media',
+      resolvida: false,
+    });
+
+    await carregar();
+  }, []);
+
   const pendenciasAtivas = pendencias.filter((p) => !p.resolvida).length;
 
   return (
     <AppContext.Provider value={{
       ordens, pendencias, mecanicos, loading,
       resolverPendencia, descartarPendencia, atualizarComissao,
+      adicionarMecanico, adicionarOS, editarOS,
       pendenciasAtivas, recarregar: carregar,
     }}>
       {children}

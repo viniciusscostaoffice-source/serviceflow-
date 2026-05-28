@@ -8,11 +8,7 @@ import { Label } from '../components/ui/label';
 import { toast } from 'sonner';
 
 export function RegrasComissao() {
-  const [regras, setRegras] = useState([
-    { id: 1, servico: 'Troca de Óleo Completa', comissao: 5, tipo: 'percentual' },
-    { id: 2, servico: 'Revisão Motor', comissao: 30, tipo: 'percentual' },
-    { id: 3, servico: 'Alinhamento 3D', comissao: 12, tipo: 'percentual' },
-  ]);
+  const [regras, setRegras] = useState<{ id: number; servico: string; comissao: number; tipo: string }[]>([]);
 
   const [isNovoOpen, setIsNovoOpen] = useState(false);
   const [novoServico, setNovoServico] = useState('');

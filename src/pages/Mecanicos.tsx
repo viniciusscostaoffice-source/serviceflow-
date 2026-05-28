@@ -87,10 +87,12 @@ function ComissaoInline({ mecId, value, onSave }: { mecId: number; value: number
 }
 
 export function Mecanicos() {
-  const { mecanicos, atualizarComissao, ordens } = useAppContext();
+  const { mecanicos, atualizarComissao, ordens, adicionarMecanico } = useAppContext();
   const [isInviteOpen, setIsInviteOpen] = useState(false);
   const [invitePhone, setInvitePhone] = useState('');
   const [inviteName, setInviteName] = useState('');
+  const [inviteComissao, setInviteComissao] = useState('15');
+  const [saving, setSaving] = useState(false);
   const [search, setSearch] = useState('');
 
   const now = new Date();
@@ -101,12 +103,30 @@ export function Mecanicos() {
     m.nome.toLowerCase().includes(search.toLowerCase()),
   );
 
-  function handleInvite(e: React.FormEvent) {
+  async function handleInvite(e: React.FormEvent) {
     e.preventDefault();
-    toast.success(`Convite enviado via WhatsApp para ${inviteName}!`);
-    setIsInviteOpen(false);
-    setInviteName('');
-    setInvitePhone('');
+    const comissao = parseFloat(inviteComissao);
+    if (isNaN(comissao) || comissao < 0 || comissao > 100) {
+      toast.error('Comissão deve ser entre 0 e 100.');
+      return;
+    }
+    setSaving(true);
+    try {
+      await adicionarMecanico(inviteName, invitePhone, comissao);
+      // Abre WhatsApp com mensagem de boas-vindas
+      const msg = encodeURIComponent(`Olá ${inviteName}! Você foi adicionado à equipe no ServiceFlow. Acesse o sistema para acompanhar suas ordens e comissões.`);
+      const phone = invitePhone.replace(/\D/g, '');
+      window.open(`https://wa.me/55${phone}?text=${msg}`, '_blank');
+      toast.success(`${inviteName} adicionado com sucesso!`);
+      setIsInviteOpen(false);
+      setInviteName('');
+      setInvitePhone('');
+      setInviteComissao('15');
+    } catch {
+      toast.error('Erro ao adicionar mecânico. Tente novamente.');
+    } finally {
+      setSaving(false);
+    }
   }
 
   function osMes(mecId: number) {
@@ -163,12 +183,14 @@ export function Mecanicos() {
               </div>
               <div className="space-y-2">
                 <Label>Comissão Padrão Inicial (%)</Label>
-                <Input type="number" defaultValue={15} min={0} max={100} />
+                <Input type="number" value={inviteComissao} onChange={e => setInviteComissao(e.target.value)} min={0} max={100} />
                 <p className="text-xs text-gray-400">Pode ser alterada a qualquer momento no card do mecânico.</p>
               </div>
               <DialogFooter className="pt-4">
                 <Button type="button" variant="ghost" onClick={() => setIsInviteOpen(false)}>Cancelar</Button>
-                <Button type="submit" className="bg-primary hover:bg-[#E55A15] text-white">Enviar Convite</Button>
+                <Button type="submit" disabled={saving} className="bg-primary hover:bg-[#E55A15] text-white">
+                  {saving ? 'Salvando...' : 'Adicionar'}
+                </Button>
               </DialogFooter>
             </form>
           </DialogContent>

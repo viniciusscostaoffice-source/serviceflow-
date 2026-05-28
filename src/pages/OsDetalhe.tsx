@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { Button } from '../components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
@@ -9,51 +9,132 @@ import { Textarea } from '../components/ui/textarea';
 import { Input } from '../components/ui/input';
 import { ArrowLeft, Edit, FileText, Wrench as WrenchIcon, AlertTriangle } from 'lucide-react';
 import { toast } from 'sonner';
+import { supabase } from '../lib/supabase';
+import { useAppContext } from '../lib/AppContext';
+
+interface OSDetalhe {
+  id: number;
+  num: string;
+  data: string;
+  status: string;
+  cliente: string;
+  veiculo: string;
+  placa: string;
+  descricao: string;
+  mecanicoPrincipal: string;
+  mecanicoId: number;
+  ajudante: string | null;
+  maoDeObra: number;
+  pecas: number;
+  comissaoMecanico: number;
+  comissaoAjudante: number;
+  comissao: number;
+  edicoes: { data: string; motivo: string }[];
+}
+
+const statusMap: Record<string, { label: string; bg: string }> = {
+  concluida:    { label: 'Concluída',  bg: 'bg-success text-white' },
+  aberta:       { label: 'Aberta',     bg: 'bg-secondary text-white' },
+  paga:         { label: 'Paga',       bg: 'bg-gray-800 text-white' },
+  em_pendencia: { label: 'Pendência',  bg: 'bg-red-500 text-white' },
+  cancelada:    { label: 'Cancelada',  bg: 'bg-red-500 text-white' },
+};
 
 export function OsDetalhe() {
   const { id } = useParams();
+  const { mecanicos, editarOS, recarregar } = useAppContext();
+  const [os, setOs] = useState<OSDetalhe | null>(null);
+  const [loading, setLoading] = useState(true);
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [motivoEdicao, setMotivoEdicao] = useState('');
+  const [novoMaoObra, setNovoMaoObra] = useState<number>(0);
+  const [novoPecas, setNovoPecas] = useState<number>(0);
+  const [saving, setSaving] = useState(false);
 
-  // Mock data for the OS
-  const os = {
-    id,
-    num: '#1045',
-    data: '23/05/2026',
-    status: 'concluida',
-    cliente: 'João Silva',
-    veiculo: 'VW Gol 1.6 2018',
-    placa: 'ABC-1234',
-    mecanicoPrincipal: 'Carlos',
-    ajudante: 'Paulo',
-    descricao: 'Troca de óleo, filtros e pastilhas de freio dianteiras. Revisão geral nos fluidos.',
-    maoDeObra: 250.00,
-    pecas: 450.00,
-    comissaoMecanico: 30.00,
-    comissaoAjudante: 7.50,
-    edicoes: [
-      { data: '24/05/2026 10:15', autor: 'João', motivo: 'Corrigido valor da mão de obra que estava digitado errado' }
-    ]
-  };
+  useEffect(() => {
+    if (!id) return;
+    async function buscar() {
+      setLoading(true);
+      const { data, error } = await supabase
+        .from('ordens_servico')
+        .select('*, mecanicos!mecanico_id(nome), ajudante:mecanicos!ajudante_id(nome)')
+        .eq('id', id)
+        .single();
 
-  const statusMap: Record<string, { label: string, bg: string }> = {
-    concluida: { label: 'Concluída', bg: 'bg-success text-white' },
-    aberta: { label: 'Aberta', bg: 'bg-secondary text-white' },
-    paga: { label: 'Paga', bg: 'bg-gray-800 text-white' },
-    em_pendencia: { label: 'Pendência', bg: 'bg-red-500 text-white' },
-    cancelada: { label: 'Cancelada', bg: 'bg-red-500 text-white' }
-  };
+      if (error || !data) { setLoading(false); return; }
 
-  const handleEdit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (motivoEdicao.length < 5) {
-      toast.error('Informe um motivo válido para a edição.');
-      return;
+      const { data: edicoes } = await supabase
+        .from('edicoes_os')
+        .select('motivo, criado_em')
+        .eq('os_id', id)
+        .order('criado_em', { ascending: false });
+
+      setOs({
+        id:                data.id,
+        num:               `#${data.num ?? data.id}`,
+        data:              new Date(data.data).toLocaleDateString('pt-BR'),
+        status:            data.status,
+        cliente:           data.cliente,
+        veiculo:           data.veiculo,
+        placa:             data.placa ?? '',
+        descricao:         data.descricao ?? '',
+        mecanicoPrincipal: (data.mecanicos as { nome: string } | null)?.nome ?? '',
+        mecanicoId:        data.mecanico_id,
+        ajudante:          (data.ajudante as { nome: string } | null)?.nome ?? null,
+        maoDeObra:         Number(data.total_mao_obra),
+        pecas:             Number(data.total_pecas),
+        comissaoMecanico:  Number(data.comissao_mecanico),
+        comissaoAjudante:  Number(data.comissao_ajudante),
+        comissao:          Number(data.comissao),
+        edicoes:           (edicoes ?? []).map(e => ({
+          data:   new Date(e.criado_em).toLocaleString('pt-BR'),
+          motivo: e.motivo,
+        })),
+      });
+      setLoading(false);
     }
-    toast.success('Edição registrada com sucesso!');
-    setIsEditOpen(false);
-    setMotivoEdicao('');
+    buscar();
+  }, [id]);
+
+  useEffect(() => {
+    if (os) {
+      setNovoMaoObra(os.maoDeObra);
+      setNovoPecas(os.pecas);
+    }
+  }, [os]);
+
+  const handleEdit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (motivoEdicao.length < 5) { toast.error('Informe um motivo válido.'); return; }
+    if (!os) return;
+    setSaving(true);
+    try {
+      const mec = mecanicos.find(m => m.id === os.mecanicoId);
+      await editarOS(os.id, novoMaoObra, novoPecas, motivoEdicao, os.mecanicoId, mec?.comissaoPadrao ?? 0);
+      recarregar();
+      toast.success('OS atualizada! Comissão recalculada.');
+      setIsEditOpen(false);
+      setMotivoEdicao('');
+      // Atualiza local
+      const novaComissao = (novoMaoObra * (mec?.comissaoPadrao ?? 0)) / 100;
+      setOs(prev => prev ? {
+        ...prev,
+        maoDeObra:        novoMaoObra,
+        pecas:            novoPecas,
+        comissao:         novaComissao,
+        comissaoMecanico: novaComissao,
+        comissaoAjudante: 0,
+        edicoes:          [{ data: new Date().toLocaleString('pt-BR'), motivo: motivoEdicao }, ...prev.edicoes],
+      } : null);
+    } catch {
+      toast.error('Erro ao salvar. Tente novamente.');
+    } finally {
+      setSaving(false);
+    }
   };
+
+  if (loading) return <div className="flex items-center justify-center h-64"><div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin" /></div>;
+  if (!os) return <div className="text-center py-20 text-gray-400">OS não encontrada.</div>;
 
   return (
     <div className="max-w-4xl mx-auto space-y-6">
@@ -62,17 +143,15 @@ export function OsDetalhe() {
           <Button variant="outline" size="icon" render={<Link to="/os" />}>
             <ArrowLeft size={20} />
           </Button>
-          <h1 className="font-display text-3xl uppercase text-secondary">
-            OS {os.num}
-          </h1>
+          <h1 className="font-display text-3xl uppercase text-secondary">OS {os.num}</h1>
           <Badge className={statusMap[os.status]?.bg || 'bg-gray-200'}>
             {statusMap[os.status]?.label || os.status}
           </Badge>
         </div>
-        
+
         <Dialog open={isEditOpen} onOpenChange={setIsEditOpen}>
           <DialogTrigger render={<Button variant="outline" className="text-secondary border-secondary" />}>
-             <Edit className="w-4 h-4 mr-2" /> Editar OS
+            <Edit className="w-4 h-4 mr-2" /> Editar OS
           </DialogTrigger>
           <DialogContent>
             <DialogHeader>
@@ -81,22 +160,33 @@ export function OsDetalhe() {
             <form onSubmit={handleEdit} className="space-y-4 pt-4">
               <div className="bg-orange-50 border border-orange-200 p-3 rounded flex gap-3 text-orange-800 text-sm">
                 <AlertTriangle className="shrink-0 text-orange-500" />
-                <p>O valor dessa OS já compôs comissões. Qualquer alteração aqui ficará registrada no histórico e pode afetar os fechamentos.</p>
-              </div>
-              
-              <div className="space-y-2">
-                <Label>Novo Valor Mão de Obra (R$)</Label>
-                <Input type="number" defaultValue={os.maoDeObra} />
-              </div>
-              <div className="space-y-2">
-                <Label>Novo Valor Peças (R$)</Label>
-                <Input type="number" defaultValue={os.pecas} />
+                <p>A comissão será recalculada automaticamente com base no novo valor da mão de obra.</p>
               </div>
 
               <div className="space-y-2">
+                <Label>Novo Valor Mão de Obra (R$)</Label>
+                <Input type="number" min="0" step="0.01" value={novoMaoObra} onChange={e => setNovoMaoObra(parseFloat(e.target.value) || 0)} />
+              </div>
+              <div className="space-y-2">
+                <Label>Novo Valor Peças (R$)</Label>
+                <Input type="number" min="0" step="0.01" value={novoPecas} onChange={e => setNovoPecas(parseFloat(e.target.value) || 0)} />
+              </div>
+
+              {/* Prévia do recálculo */}
+              {os && (
+                <div className="bg-primary/10 border border-primary/20 p-3 rounded text-sm space-y-1">
+                  <p className="font-bold text-primary uppercase text-xs">Prévia da nova comissão</p>
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Nova comissão ({mecanicos.find(m => m.id === os.mecanicoId)?.comissaoPadrao ?? 0}%):</span>
+                    <span className="font-bold">R$ {((novoMaoObra * (mecanicos.find(m => m.id === os.mecanicoId)?.comissaoPadrao ?? 0)) / 100).toFixed(2)}</span>
+                  </div>
+                </div>
+              )}
+
+              <div className="space-y-2">
                 <Label>Motivo da Edição <span className="text-red-500">*</span></Label>
-                <Textarea 
-                  required 
+                <Textarea
+                  required
                   placeholder="Explique por que está alterando esta OS..."
                   value={motivoEdicao}
                   onChange={e => setMotivoEdicao(e.target.value)}
@@ -105,7 +195,9 @@ export function OsDetalhe() {
 
               <DialogFooter>
                 <Button type="button" variant="ghost" onClick={() => setIsEditOpen(false)}>Cancelar</Button>
-                <Button type="submit" className="bg-primary hover:bg-[#E55A15] text-white">Salvar Alterações</Button>
+                <Button type="submit" disabled={saving} className="bg-primary hover:bg-[#E55A15] text-white">
+                  {saving ? 'Salvando...' : 'Salvar Alterações'}
+                </Button>
               </DialogFooter>
             </form>
           </DialogContent>
@@ -115,36 +207,23 @@ export function OsDetalhe() {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <div className="md:col-span-2 space-y-6">
           <Card>
-             <CardHeader>
-               <CardTitle className="text-sm font-bold text-gray-500 uppercase tracking-wider flex items-center gap-2">
-                 <FileText size={16} /> Dados do Serviço
-               </CardTitle>
-             </CardHeader>
-             <CardContent className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <p className="text-sm text-gray-500 mb-1">Cliente</p>
-                    <p className="font-bold text-lg">{os.cliente}</p>
-                  </div>
-                  <div>
-                    <p className="text-sm text-gray-500 mb-1">Data</p>
-                    <p className="font-bold text-lg">{os.data}</p>
-                  </div>
-                  <div>
-                    <p className="text-sm text-gray-500 mb-1">Veículo</p>
-                    <p className="font-medium">{os.veiculo}</p>
-                  </div>
-                  <div>
-                    <p className="text-sm text-gray-500 mb-1">Placa</p>
-                    <p className="font-medium">{os.placa}</p>
-                  </div>
-                </div>
-                
-                <div className="pt-4 border-t border-gray-100">
-                  <p className="text-sm text-gray-500 mb-1">Descrição</p>
-                  <p className="text-sm leading-relaxed">{os.descricao}</p>
-                </div>
-             </CardContent>
+            <CardHeader>
+              <CardTitle className="text-sm font-bold text-gray-500 uppercase tracking-wider flex items-center gap-2">
+                <FileText size={16} /> Dados do Serviço
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div><p className="text-sm text-gray-500 mb-1">Cliente</p><p className="font-bold text-lg">{os.cliente}</p></div>
+                <div><p className="text-sm text-gray-500 mb-1">Data</p><p className="font-bold text-lg">{os.data}</p></div>
+                <div><p className="text-sm text-gray-500 mb-1">Veículo</p><p className="font-medium">{os.veiculo}</p></div>
+                <div><p className="text-sm text-gray-500 mb-1">Placa</p><p className="font-medium">{os.placa}</p></div>
+              </div>
+              <div className="pt-4 border-t border-gray-100">
+                <p className="text-sm text-gray-500 mb-1">Descrição</p>
+                <p className="text-sm leading-relaxed">{os.descricao}</p>
+              </div>
+            </CardContent>
           </Card>
 
           {os.edicoes.length > 0 && (
@@ -158,8 +237,8 @@ export function OsDetalhe() {
                 <ul className="space-y-3">
                   {os.edicoes.map((ed, idx) => (
                     <li key={idx} className="text-sm border-l-2 border-orange-300 pl-3">
-                      <p className="font-medium text-orange-900">{ed.autor} <span className="text-orange-500/70 font-normal">em {ed.data}</span></p>
-                      <p className="text-orange-800/80 mt-1">{ed.motivo}</p>
+                      <p className="text-orange-500/70 text-xs">{ed.data}</p>
+                      <p className="text-orange-800/80 mt-0.5">{ed.motivo}</p>
                     </li>
                   ))}
                 </ul>
@@ -192,10 +271,10 @@ export function OsDetalhe() {
               </div>
             </CardContent>
           </Card>
-          
+
           <Card className="bg-secondary text-white border-none">
             <CardHeader className="pb-2">
-               <CardTitle className="text-xs text-gray-400 uppercase tracking-widest">Resumo Financeiro</CardTitle>
+              <CardTitle className="text-xs text-gray-400 uppercase tracking-widest">Resumo Financeiro</CardTitle>
             </CardHeader>
             <CardContent className="space-y-2">
               <div className="flex justify-between">
