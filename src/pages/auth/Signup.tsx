@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { Wrench, Loader2, Eye, EyeOff, ArrowRight, CheckCircle2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { motion } from 'motion/react';
+import { supabase } from '../../lib/supabase';
 
 export function Signup() {
   const [loading, setLoading] = useState(false);
@@ -12,28 +13,73 @@ export function Signup() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
+
     const form = e.target as HTMLFormElement;
-    const oficina = (form.elements.namedItem('oficina') as HTMLInputElement).value;
-    const nome = (form.elements.namedItem('nome') as HTMLInputElement).value;
-    setTimeout(() => {
-      localStorage.setItem('sf_oficina', oficina);
-      localStorage.setItem('sf_usuario', nome);
-      toast.success('Conta criada com sucesso!');
-      navigate('/onboarding');
+    const nome    = (form.elements.namedItem('nome')     as HTMLInputElement).value.trim();
+    const oficina = (form.elements.namedItem('oficina')  as HTMLInputElement).value.trim();
+    const email   = (form.elements.namedItem('email')    as HTMLInputElement).value.trim();
+    const password = (form.elements.namedItem('password') as HTMLInputElement).value;
+    const telefone = (form.elements.namedItem('telefone') as HTMLInputElement).value.replace(/\D/g, '');
+    const cidade  = (form.elements.namedItem('cidade')   as HTMLInputElement).value.trim();
+    const estado  = (form.elements.namedItem('estado')   as HTMLInputElement).value.trim().toUpperCase();
+
+    const { data, error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        data: { nome, oficina, cidade, estado },
+      },
+    });
+
+    if (error) {
+      toast.error(
+        error.message.includes('already registered')
+          ? 'Este e-mail já está cadastrado. Faça login.'
+          : error.message
+      );
       setLoading(false);
-    }, 1500);
+      return;
+    }
+
+    // Salvar localmente para exibição imediata no dashboard
+    localStorage.setItem('sf_usuario', nome);
+    localStorage.setItem('sf_oficina', oficina);
+
+    // Criar profile de billing (trial 7 dias) via Supabase
+    if (data.user) {
+      await supabase.from('profiles').upsert({
+        user_id:             data.user.id,
+        email,
+        cellphone:           telefone || null,
+        trial_ends_at:       new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+        subscription_status: 'trial',
+      }, { onConflict: 'user_id' });
+
+      localStorage.setItem('sf_user_id', data.user.id);
+    }
+
+    // Se Supabase exige confirmação de e-mail, avisar o usuário
+    if (!data.session) {
+      toast.success('Conta criada! Verifique seu e-mail para confirmar o cadastro.');
+      navigate('/login');
+    } else {
+      toast.success('Conta criada com sucesso! Bem-vindo ao ServiceFlow!');
+      navigate('/onboarding');
+    }
+
+    setLoading(false);
   };
 
   const beneficios = [
     'Controle de comissões em tempo real',
     'App exclusivo para seus mecânicos',
     'Fechamento mensal automatizado',
-    '14 dias grátis, sem cartão',
+    '7 dias grátis, sem cartão',
   ];
 
   return (
     <div className="min-h-screen flex">
-      {/* Lado esquerdo — escuro */}
+      {/* Lado esquerdo */}
       <div className="hidden lg:flex lg:w-[42%] bg-[#0A0A0A] flex-col justify-between p-12 relative overflow-hidden shrink-0">
         <div
           className="absolute inset-0 opacity-[0.04]"
@@ -63,7 +109,6 @@ export function Signup() {
               de verdade.
             </h2>
           </div>
-
           <ul className="space-y-3">
             {beneficios.map((b) => (
               <li key={b} className="flex items-start gap-3">
@@ -79,9 +124,7 @@ export function Signup() {
             "Antes eu perdia horas calculando comissão na planilha. Agora é tudo automático e meus mecânicos confiam nos números."
           </p>
           <div className="flex items-center gap-3 mt-4">
-            <div className="w-9 h-9 rounded-full bg-[#FF6B1A]/20 flex items-center justify-center text-xs font-bold text-[#FF6B1A]">
-              MR
-            </div>
+            <div className="w-9 h-9 rounded-full bg-[#FF6B1A]/20 flex items-center justify-center text-xs font-bold text-[#FF6B1A]">MR</div>
             <div>
               <p className="text-white text-xs font-semibold">Marcos Ribeiro</p>
               <p className="text-gray-500 text-xs">Dono — Auto Mecânica Ribeiro, SP</p>
@@ -92,7 +135,6 @@ export function Signup() {
 
       {/* Lado direito — formulário */}
       <div className="flex-1 flex flex-col justify-center items-center px-6 py-12 bg-[#F5F5F0] overflow-y-auto">
-        {/* Logo mobile */}
         <Link to="/" className="flex lg:hidden items-center gap-2 mb-10">
           <div className="w-8 h-8 bg-[#FF6B1A] rounded-lg flex items-center justify-center">
             <Wrench size={18} className="text-white" />
@@ -112,131 +154,74 @@ export function Signup() {
             <h2 className="text-3xl font-bold text-[#0A0A0A] mb-1.5">Crie sua conta grátis</h2>
             <p className="text-gray-500 text-sm">
               Já tem conta?{' '}
-              <Link to="/login" className="text-[#FF6B1A] font-semibold hover:underline">
-                Faça login aqui
-              </Link>
+              <Link to="/login" className="text-[#FF6B1A] font-semibold hover:underline">Faça login aqui</Link>
             </p>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-4">
-            {/* Nome + Oficina na mesma linha */}
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1.5">
-                <label className="text-xs font-semibold text-[#0A0A0A] uppercase tracking-wide" htmlFor="nome">
-                  Seu Nome
-                </label>
-                <input
-                  id="nome"
-                  name="nome"
-                  required
-                  placeholder="João Silva"
-                  className="w-full h-12 px-4 rounded-xl border-2 border-gray-200 bg-white text-[#0A0A0A] placeholder-gray-400 text-sm focus:outline-none focus:border-[#FF6B1A] transition-colors"
-                />
+                <label className="text-xs font-semibold text-[#0A0A0A] uppercase tracking-wide" htmlFor="nome">Seu Nome</label>
+                <input id="nome" name="nome" required placeholder="João Silva"
+                  className="w-full h-12 px-4 rounded-xl border-2 border-gray-200 bg-white text-[#0A0A0A] placeholder-gray-400 text-sm focus:outline-none focus:border-[#FF6B1A] transition-colors" />
               </div>
               <div className="space-y-1.5">
-                <label className="text-xs font-semibold text-[#0A0A0A] uppercase tracking-wide" htmlFor="oficina">
-                  Nome da Oficina
-                </label>
-                <input
-                  id="oficina"
-                  name="oficina"
-                  required
-                  placeholder="Auto Center Silva"
-                  className="w-full h-12 px-4 rounded-xl border-2 border-gray-200 bg-white text-[#0A0A0A] placeholder-gray-400 text-sm focus:outline-none focus:border-[#FF6B1A] transition-colors"
-                />
+                <label className="text-xs font-semibold text-[#0A0A0A] uppercase tracking-wide" htmlFor="oficina">Nome da Oficina</label>
+                <input id="oficina" name="oficina" required placeholder="Auto Center Silva"
+                  className="w-full h-12 px-4 rounded-xl border-2 border-gray-200 bg-white text-[#0A0A0A] placeholder-gray-400 text-sm focus:outline-none focus:border-[#FF6B1A] transition-colors" />
               </div>
             </div>
 
-            {/* E-mail */}
             <div className="space-y-1.5">
-              <label className="text-xs font-semibold text-[#0A0A0A] uppercase tracking-wide" htmlFor="email">
-                E-mail
-              </label>
-              <input
-                id="email"
-                type="email"
-                required
-                placeholder="seu@email.com"
-                className="w-full h-12 px-4 rounded-xl border-2 border-gray-200 bg-white text-[#0A0A0A] placeholder-gray-400 text-sm focus:outline-none focus:border-[#FF6B1A] transition-colors"
-              />
+              <label className="text-xs font-semibold text-[#0A0A0A] uppercase tracking-wide" htmlFor="email">E-mail</label>
+              <input id="email" name="email" type="email" required placeholder="seu@email.com"
+                className="w-full h-12 px-4 rounded-xl border-2 border-gray-200 bg-white text-[#0A0A0A] placeholder-gray-400 text-sm focus:outline-none focus:border-[#FF6B1A] transition-colors" />
             </div>
 
-            {/* Senha */}
             <div className="space-y-1.5">
-              <label className="text-xs font-semibold text-[#0A0A0A] uppercase tracking-wide" htmlFor="password">
-                Senha
-              </label>
+              <label className="text-xs font-semibold text-[#0A0A0A] uppercase tracking-wide" htmlFor="telefone">WhatsApp / Telefone</label>
+              <input id="telefone" name="telefone" type="tel" required placeholder="(99) 99999-9999"
+                className="w-full h-12 px-4 rounded-xl border-2 border-gray-200 bg-white text-[#0A0A0A] placeholder-gray-400 text-sm focus:outline-none focus:border-[#FF6B1A] transition-colors" />
+            </div>
+
+            <div className="space-y-1.5">
+              <label className="text-xs font-semibold text-[#0A0A0A] uppercase tracking-wide" htmlFor="password">Senha</label>
               <div className="relative">
-                <input
-                  id="password"
-                  type={showPassword ? 'text' : 'password'}
-                  required
-                  placeholder="Mínimo 8 caracteres"
-                  minLength={8}
-                  className="w-full h-12 px-4 pr-12 rounded-xl border-2 border-gray-200 bg-white text-[#0A0A0A] placeholder-gray-400 text-sm focus:outline-none focus:border-[#FF6B1A] transition-colors"
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(v => !v)}
-                  className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
-                  tabIndex={-1}
-                >
+                <input id="password" name="password" type={showPassword ? 'text' : 'password'} required
+                  placeholder="Mínimo 6 caracteres" minLength={6}
+                  className="w-full h-12 px-4 pr-12 rounded-xl border-2 border-gray-200 bg-white text-[#0A0A0A] placeholder-gray-400 text-sm focus:outline-none focus:border-[#FF6B1A] transition-colors" />
+                <button type="button" onClick={() => setShowPassword(v => !v)}
+                  className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600" tabIndex={-1}>
                   {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                 </button>
               </div>
             </div>
 
-            {/* Cidade + Estado */}
             <div className="grid grid-cols-3 gap-3">
               <div className="col-span-2 space-y-1.5">
-                <label className="text-xs font-semibold text-[#0A0A0A] uppercase tracking-wide" htmlFor="cidade">
-                  Cidade
-                </label>
-                <input
-                  id="cidade"
-                  required
-                  placeholder="São Paulo"
-                  className="w-full h-12 px-4 rounded-xl border-2 border-gray-200 bg-white text-[#0A0A0A] placeholder-gray-400 text-sm focus:outline-none focus:border-[#FF6B1A] transition-colors"
-                />
+                <label className="text-xs font-semibold text-[#0A0A0A] uppercase tracking-wide" htmlFor="cidade">Cidade</label>
+                <input id="cidade" name="cidade" required placeholder="São Paulo"
+                  className="w-full h-12 px-4 rounded-xl border-2 border-gray-200 bg-white text-[#0A0A0A] placeholder-gray-400 text-sm focus:outline-none focus:border-[#FF6B1A] transition-colors" />
               </div>
               <div className="space-y-1.5">
-                <label className="text-xs font-semibold text-[#0A0A0A] uppercase tracking-wide" htmlFor="estado">
-                  UF
-                </label>
-                <input
-                  id="estado"
-                  required
-                  placeholder="SP"
-                  maxLength={2}
-                  className="w-full h-12 px-4 rounded-xl border-2 border-gray-200 bg-white text-[#0A0A0A] placeholder-gray-400 text-sm focus:outline-none focus:border-[#FF6B1A] transition-colors uppercase"
-                />
+                <label className="text-xs font-semibold text-[#0A0A0A] uppercase tracking-wide" htmlFor="estado">UF</label>
+                <input id="estado" name="estado" required placeholder="SP" maxLength={2}
+                  className="w-full h-12 px-4 rounded-xl border-2 border-gray-200 bg-white text-[#0A0A0A] placeholder-gray-400 text-sm focus:outline-none focus:border-[#FF6B1A] transition-colors uppercase" />
               </div>
             </div>
 
-            {/* Termos */}
             <p className="text-xs text-gray-400 leading-relaxed">
               Ao cadastrar, você concorda com nossos{' '}
-              <a href="#" className="text-[#FF6B1A] hover:underline">Termos de Uso</a>{' '}
-              e{' '}
+              <a href="#" className="text-[#FF6B1A] hover:underline">Termos de Uso</a> e{' '}
               <a href="#" className="text-[#FF6B1A] hover:underline">Política de Privacidade</a>.
             </p>
 
-            {/* Botão */}
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full bg-[#FF6B1A] hover:bg-[#E55A15] disabled:opacity-60 text-white font-bold uppercase tracking-widest text-sm rounded-xl flex items-center justify-center gap-2 transition-colors py-3.5"
-            >
+            <button type="submit" disabled={loading}
+              className="w-full bg-[#FF6B1A] hover:bg-[#E55A15] disabled:opacity-60 text-white font-bold uppercase tracking-widest text-sm rounded-xl flex items-center justify-center gap-2 transition-colors py-3.5">
               {loading ? (
-                <>
-                  <Loader2 size={18} className="animate-spin" />
-                  Criando sua conta...
-                </>
+                <><Loader2 size={18} className="animate-spin" />Criando sua conta...</>
               ) : (
-                <>
-                  Começar grátis por 14 dias
-                  <ArrowRight size={18} />
-                </>
+                <>Começar grátis — 7 dias<ArrowRight size={18} /></>
               )}
             </button>
           </form>

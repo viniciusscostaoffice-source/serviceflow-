@@ -1,6 +1,6 @@
 import { ArrowRight } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import { ScrollReveal } from '../ScrollReveal';
-import { checkoutUrl } from '../../config/env';
 
 export function FinalCTA() {
   return (
@@ -23,15 +23,13 @@ export function FinalCTA() {
 
         <ScrollReveal direction="up" delay={300} duration={700}>
           <div className="pt-6">
-            <a
-              href={checkoutUrl}
-              target="_blank"
-              rel="noopener noreferrer"
+            <Link
+              to="/signup"
               className="inline-flex w-full sm:w-auto px-8 py-5 bg-secondary text-offwhite font-display text-2xl sm:text-3xl hover:bg-white hover:text-black transition-colors duration-300 items-center justify-center gap-3 uppercase cursor-pointer"
             >
-              QUERO MINHA VAGA — R$ 49
+              COMEÇAR GRÁTIS — 7 DIAS
               <ArrowRight size={28} />
-            </a>
+            </Link>
           </div>
         </ScrollReveal>
 

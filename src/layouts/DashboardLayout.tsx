@@ -17,6 +17,10 @@ import { motion, AnimatePresence } from 'motion/react';
 import { Input } from '../components/ui/input';
 import { useAppContext } from '../lib/AppContext';
 import { toast } from 'sonner';
+import { BillingGate } from '../components/BillingGate';
+import { TrialBanner } from '../components/TrialBanner';
+import { useBilling } from '../lib/useBilling';
+import { supabase } from '../lib/supabase';
 
 const navItems = [
   { href: '/dashboard',       label: 'Dashboard',          icon: LayoutDashboard },
@@ -33,18 +37,22 @@ export function DashboardLayout() {
   const location = useLocation();
   const navigate = useNavigate();
   const { pendenciasAtivas, loading } = useAppContext();
+  const { billing } = useBilling();
   const nomeOficina = localStorage.getItem('sf_oficina') || 'Minha Oficina';
   const nomeUsuario = localStorage.getItem('sf_usuario') || 'Usuário';
   const iniciaisUsuario = nomeUsuario.split(' ').map(n => n[0]).slice(0, 2).join('').toUpperCase();
 
-  function handleLogout() {
+  async function handleLogout() {
+    await supabase.auth.signOut();
     localStorage.removeItem('sf_oficina');
     localStorage.removeItem('sf_usuario');
+    localStorage.removeItem('sf_user_id');
     toast.success('Sessão encerrada. Até logo!');
-    setTimeout(() => navigate('/login'), 800);
+    navigate('/login');
   }
 
   return (
+    <BillingGate>
     <div className="min-h-screen bg-[#F5F5F0] text-[#0A0A0A] font-sans flex overflow-hidden">
       {/* Overlay mobile */}
       <AnimatePresence>
@@ -153,6 +161,7 @@ export function DashboardLayout() {
           </div>
         </header>
 
+        <TrialBanner billing={billing} />
         <main className="flex-1 overflow-auto p-4 md:p-8 relative">
           {loading ? (
             <div className="flex items-center justify-center h-64">
@@ -167,5 +176,6 @@ export function DashboardLayout() {
         </main>
       </div>
     </div>
+    </BillingGate>
   );
 }

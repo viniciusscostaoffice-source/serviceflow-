@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { Loader2, Eye, EyeOff, Wrench, ArrowRight } from 'lucide-react';
 import { toast } from 'sonner';
 import { motion } from 'motion/react';
+import { supabase } from '../../lib/supabase';
 
 export function Login() {
   const [email, setEmail] = useState('');
@@ -14,18 +15,35 @@ export function Login() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    setTimeout(() => {
-      toast.success('Bem-vindo de volta!');
-      navigate('/dashboard');
+
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+
+    if (error) {
+      toast.error(
+        error.message === 'Invalid login credentials'
+          ? 'E-mail ou senha incorretos.'
+          : error.message
+      );
       setLoading(false);
-    }, 1000);
+      return;
+    }
+
+    // Salvar dados no localStorage para exibição e billing
+    const nome = data.user?.user_metadata?.nome ?? '';
+    const oficina = data.user?.user_metadata?.oficina ?? '';
+    if (nome) localStorage.setItem('sf_usuario', nome);
+    if (oficina) localStorage.setItem('sf_oficina', oficina);
+    if (data.user?.id) localStorage.setItem('sf_user_id', data.user.id);
+
+    toast.success('Bem-vindo de volta!');
+    navigate('/dashboard');
+    setLoading(false);
   };
 
   return (
     <div className="min-h-screen flex">
       {/* Lado esquerdo — painel escuro */}
       <div className="hidden lg:flex lg:w-1/2 bg-[#0A0A0A] flex-col justify-between p-12 relative overflow-hidden">
-        {/* Grade decorativa */}
         <div
           className="absolute inset-0 opacity-[0.04]"
           style={{
@@ -34,10 +52,8 @@ export function Login() {
             backgroundSize: '40px 40px',
           }}
         />
-        {/* Gradiente radial laranja */}
         <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-[#FF6B1A] rounded-full opacity-10 blur-[120px] pointer-events-none" />
 
-        {/* Logo */}
         <Link to="/" className="flex items-center gap-3 z-10">
           <div className="w-10 h-10 bg-[#FF6B1A] rounded-lg flex items-center justify-center">
             <Wrench size={22} className="text-white" />
@@ -47,7 +63,6 @@ export function Login() {
           </span>
         </Link>
 
-        {/* Copy central */}
         <div className="z-10 space-y-6">
           <div className="inline-flex items-center gap-2 bg-[#FF6B1A]/10 border border-[#FF6B1A]/30 text-[#FF6B1A] text-xs font-bold uppercase tracking-widest px-4 py-2 rounded-full">
             Gestão de Comissões para Oficinas
@@ -62,7 +77,6 @@ export function Login() {
           </p>
         </div>
 
-        {/* Rodapé esquerdo */}
         <div className="z-10 flex items-center gap-3">
           <div className="flex -space-x-2">
             {['CS', 'PO', 'ZR'].map((ini) => (
@@ -82,7 +96,6 @@ export function Login() {
 
       {/* Lado direito — formulário */}
       <div className="flex-1 flex flex-col justify-center items-center px-6 py-12 bg-[#F5F5F0]">
-        {/* Logo mobile */}
         <Link to="/" className="flex lg:hidden items-center gap-2 mb-10">
           <div className="w-8 h-8 bg-[#FF6B1A] rounded-lg flex items-center justify-center">
             <Wrench size={18} className="text-white" />
@@ -109,7 +122,6 @@ export function Login() {
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-5">
-            {/* E-mail */}
             <div className="space-y-1.5">
               <label className="text-sm font-semibold text-[#0A0A0A]" htmlFor="email">
                 E-mail
@@ -125,15 +137,14 @@ export function Login() {
               />
             </div>
 
-            {/* Senha */}
             <div className="space-y-1.5">
               <div className="flex items-center justify-between">
                 <label className="text-sm font-semibold text-[#0A0A0A]" htmlFor="password">
                   Senha
                 </label>
-                <a href="#" className="text-xs text-[#FF6B1A] hover:underline font-medium">
+                <Link to="/forgot-password" className="text-xs text-[#FF6B1A] hover:underline font-medium">
                   Esqueceu a senha?
-                </a>
+                </Link>
               </div>
               <div className="relative">
                 <input
@@ -156,40 +167,28 @@ export function Login() {
               </div>
             </div>
 
-            {/* Botão */}
             <button
               type="submit"
               disabled={loading}
               className="w-full h-13 bg-[#FF6B1A] hover:bg-[#E55A15] disabled:opacity-60 text-white font-bold uppercase tracking-widest text-sm rounded-xl flex items-center justify-center gap-2 transition-colors mt-2 py-3.5"
             >
               {loading ? (
-                <>
-                  <Loader2 size={18} className="animate-spin" />
-                  Entrando...
-                </>
+                <><Loader2 size={18} className="animate-spin" />Entrando...</>
               ) : (
-                <>
-                  Entrar no Painel
-                  <ArrowRight size={18} />
-                </>
+                <>Entrar no Painel<ArrowRight size={18} /></>
               )}
             </button>
           </form>
 
-          {/* Divider */}
           <div className="flex items-center gap-3 my-6">
             <div className="flex-1 h-px bg-gray-200" />
             <span className="text-xs text-gray-400 font-medium">ou acesse como</span>
             <div className="flex-1 h-px bg-gray-200" />
           </div>
 
-          {/* Demo rápido */}
           <button
             type="button"
-            onClick={() => {
-              setEmail('demo@serviceflow.com.br');
-              setPassword('demo1234');
-            }}
+            onClick={() => { setEmail('demo@serviceflow.com.br'); setPassword('demo1234'); }}
             className="w-full h-12 border-2 border-gray-200 hover:border-[#0A0A0A] bg-white text-[#0A0A0A] font-semibold text-sm rounded-xl transition-colors"
           >
             Usar conta demo

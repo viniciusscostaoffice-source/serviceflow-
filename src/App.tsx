@@ -1,9 +1,5 @@
-/**
- * @license
- * SPDX-License-Identifier: Apache-2.0
- */
-
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { useEffect, useState } from 'react';
 import { Landing } from './pages/Landing';
 import { DashboardLayout } from './layouts/DashboardLayout';
 import { Dashboard } from './pages/Dashboard';
@@ -17,43 +13,70 @@ import { Fechamento } from './pages/Fechamento';
 import { Configuracoes } from './pages/Configuracoes';
 import { MecanicoDetalhe } from './pages/MecanicoDetalhe';
 import { Toaster } from 'sonner';
-
 import { TooltipProvider } from './components/ui/tooltip';
 import { AppProvider } from './lib/AppContext';
-
 import { Login } from './pages/auth/Login';
 import { Signup } from './pages/auth/Signup';
 import { Onboarding } from './pages/auth/Onboarding';
+import { supabase } from './lib/supabase';
+
+function ProtectedRoute({ children }: { children: React.ReactNode }) {
+  const [checking, setChecking] = useState(true);
+  const [authed, setAuthed] = useState(false);
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data }) => {
+      setAuthed(!!data.session);
+      setChecking(false);
+    });
+    const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
+      setAuthed(!!session);
+    });
+    return () => listener.subscription.unsubscribe();
+  }, []);
+
+  if (checking) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-[#F5F5F0]">
+        <div className="w-8 h-8 border-4 border-[#FF6B1A] border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
+  }
+
+  return authed ? <>{children}</> : <Navigate to="/login" replace />;
+}
 
 export default function App() {
   return (
     <AppProvider>
-    <TooltipProvider>
-      <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<Landing />} />
+      <TooltipProvider>
+        <BrowserRouter>
+          <Routes>
+            <Route path="/" element={<Landing />} />
+            <Route path="/login" element={<Login />} />
+            <Route path="/signup" element={<Signup />} />
+            <Route path="/onboarding" element={<Onboarding />} />
 
-          <Route path="/login" element={<Login />} />
-          <Route path="/signup" element={<Signup />} />
-          <Route path="/onboarding" element={<Onboarding />} />
-
-          {/* Dashboard routes */}
-          <Route element={<DashboardLayout />}>
-            <Route path="/dashboard" element={<Dashboard />} />
-            <Route path="/os" element={<OrdensServico />} />
-            <Route path="/os/nova" element={<OsNova />} />
-            <Route path="/os/:id" element={<OsDetalhe />} />
-            <Route path="/mecanicos" element={<Mecanicos />} />
-            <Route path="/mecanicos/:id" element={<MecanicoDetalhe />} />
-            <Route path="/regras-comissao" element={<RegrasComissao />} />
-            <Route path="/pendencias" element={<Pendencias />} />
-            <Route path="/fechamento" element={<Fechamento />} />
-            <Route path="/configuracoes" element={<Configuracoes />} />
-          </Route>
-        </Routes>
-        <Toaster position="top-right" richColors />
-      </BrowserRouter>
-    </TooltipProvider>
+            <Route element={
+              <ProtectedRoute>
+                <DashboardLayout />
+              </ProtectedRoute>
+            }>
+              <Route path="/dashboard" element={<Dashboard />} />
+              <Route path="/os" element={<OrdensServico />} />
+              <Route path="/os/nova" element={<OsNova />} />
+              <Route path="/os/:id" element={<OsDetalhe />} />
+              <Route path="/mecanicos" element={<Mecanicos />} />
+              <Route path="/mecanicos/:id" element={<MecanicoDetalhe />} />
+              <Route path="/regras-comissao" element={<RegrasComissao />} />
+              <Route path="/pendencias" element={<Pendencias />} />
+              <Route path="/fechamento" element={<Fechamento />} />
+              <Route path="/configuracoes" element={<Configuracoes />} />
+            </Route>
+          </Routes>
+          <Toaster position="top-right" richColors />
+        </BrowserRouter>
+      </TooltipProvider>
     </AppProvider>
   );
 }

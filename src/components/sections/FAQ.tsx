@@ -5,16 +5,20 @@ import { ScrollReveal } from '../ScrollReveal';
 
 const faqs = [
   {
-    q: "Quando vou receber o sistema?",
-    a: "Entrega prevista pra 60 dias após o pagamento. Você acompanha o progresso por WhatsApp, direto com os fundadores."
+    q: "Os 7 dias grátis são de verdade? Preciso colocar cartão?",
+    a: "Sim, são de verdade. Você informa o cartão no cadastro, mas não é cobrado nada nos primeiros 7 dias. Se cancelar antes, não paga absolutamente nada."
+  },
+  {
+    q: "Qual plano eu devo escolher?",
+    a: "Depende do tamanho da sua equipe. Até 5 mecânicos: Básico (R$ 59/mês). Até 7: Profissional (R$ 80/mês). Equipe maior ou quer suporte VIP e onboarding: Premium (R$ 120/mês). Todos têm os 7 dias grátis."
   },
   {
     q: "Preciso trocar meu sistema atual?",
-    a: "Não. O ServiceFlow Oficina trabalha junto com qualquer ERP que você já usa. É focado exclusivamente na gestão de comissões."
+    a: "Não. O ServiceFlow Oficina trabalha junto com qualquer ERP que você já usa. É focado exclusivamente na gestão de comissões dos mecânicos."
   },
   {
-    q: "E se eu não gostar?",
-    a: "Garantia incondicional de 30 dias após receber o acesso. Se não resolver seu problema, devolvemos os R$ 49 e continuamos amigos."
+    q: "E se eu não gostar após os 7 dias?",
+    a: "Garantia incondicional de 30 dias após o início da cobrança. Se não resolver seu problema, devolvemos 100% e continuamos amigos."
   },
   {
     q: "Funciona em quantas oficinas?",
@@ -22,11 +26,11 @@ const faqs = [
   },
   {
     q: "Mecânico precisa de celular caro?",
-    a: "Não. O App foi feito para ser leve. Funciona em qualquer smartphone Android ou iPhone, mesmo os modelos mais básicos."
+    a: "Não. O app foi feito para ser leve. Funciona em qualquer smartphone Android ou iPhone, mesmo os modelos mais básicos."
   },
   {
-    q: "Esses R$ 49 valem pra sempre?",
-    a: "Sim. Enquanto você mantiver a assinatura ativa, pagará sempre R$ 49/mês. Este é um benefício vitalício exclusivo pros 50 primeiros clientes fundadores."
+    q: "Posso mudar de plano depois?",
+    a: "Sim. Você pode fazer upgrade ou downgrade do plano a qualquer momento direto pelo painel, sem burocracia."
   }
 ];
 
