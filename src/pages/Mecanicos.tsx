@@ -157,6 +157,9 @@ export function Mecanicos() {
   const [search, setSearch] = useState('');
   const [confirmExcluir, setConfirmExcluir] = useState<number | null>(null);
 
+  // URL base do app do mecânico — altere após o deploy
+  const APP_MECANICO_URL = 'https://serviceflow.vercel.app/areamec';
+
   const now = new Date();
   const mes = now.getMonth() + 1;
   const ano = now.getFullYear();
@@ -175,7 +178,15 @@ export function Mecanicos() {
     setSaving(true);
     try {
       await adicionarMecanico(inviteName, invitePhone, comissao);
-      const msg = encodeURIComponent(`Olá ${inviteName}! Você foi adicionado à equipe no ServiceFlow. Acesse o sistema para acompanhar suas ordens e comissões.`);
+      const primeiroNome = inviteName.split(' ')[0];
+      const linkAcesso = `${APP_MECANICO_URL}/criar-senha?nome=${encodeURIComponent(inviteName)}`;
+      const msg = encodeURIComponent(
+        `Olá ${primeiroNome}! 👋\n\nVocê foi adicionado à equipe no *ServiceFlow Oficina*.\n\n` +
+        `📱 Acesse o app pelo link abaixo e crie sua senha:\n${linkAcesso}\n\n` +
+        `📞 Login: seu número de celular\n` +
+        `🔑 Crie sua senha no primeiro acesso\n\n` +
+        `Qualquer dúvida é só chamar!`
+      );
       const phone = invitePhone.replace(/\D/g, '');
       window.open(`https://wa.me/55${phone}?text=${msg}`, '_blank');
       toast.success(`${inviteName} adicionado com sucesso!`);
@@ -199,7 +210,12 @@ export function Mecanicos() {
   function enviarLinkWhatsApp(mec: { nome: string; fone: string }) {
     const phone = mec.fone.replace(/\D/g, '');
     if (!phone) { toast.error('Este mecânico não tem telefone cadastrado.'); return; }
-    const msg = encodeURIComponent(`Olá ${mec.nome}! Acesse o ServiceFlow para acompanhar suas ordens de serviço e comissões.`);
+    const primeiroNome = mec.nome.split(' ')[0];
+    const linkAcesso = `${APP_MECANICO_URL}/criar-senha?nome=${encodeURIComponent(mec.nome)}`;
+    const msg = encodeURIComponent(
+      `Olá ${primeiroNome}! 👋\n\nAqui está seu link de acesso ao *ServiceFlow Oficina*:\n${linkAcesso}\n\n` +
+      `📞 Login: seu número de celular`
+    );
     window.open(`https://wa.me/55${phone}?text=${msg}`, '_blank');
   }
 
