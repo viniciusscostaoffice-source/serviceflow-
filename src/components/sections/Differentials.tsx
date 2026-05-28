@@ -1,5 +1,5 @@
-import { motion } from 'motion/react';
 import { Smartphone, History, MessageSquareWarning, Blocks } from 'lucide-react';
+import { ScrollReveal } from '../ScrollReveal';
 
 const diffs = [
   {
@@ -27,46 +27,33 @@ const diffs = [
 export function Differentials() {
   return (
     <section className="py-24 px-4 sm:px-6 lg:px-8 bg-primary text-secondary relative overflow-hidden">
-      {/* Background diagonal lines */}
-      <div className="absolute inset-0 opacity-10 pointer-events-none" 
-           style={{
-             backgroundImage: 'repeating-linear-gradient(45deg, #0A0A0A 0, #0A0A0A 2px, transparent 2px, transparent 12px)'
-           }}>
-      </div>
-      
+      <div
+        className="absolute inset-0 opacity-10 pointer-events-none"
+        style={{ backgroundImage: 'repeating-linear-gradient(45deg, #0A0A0A 0, #0A0A0A 2px, transparent 2px, transparent 12px)' }}
+      />
+
       <div className="max-w-7xl mx-auto relative z-10">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.5 }}
-          className="text-center mb-16"
-        >
-          <h2 className="font-display text-4xl sm:text-5xl md:text-6xl uppercase">
-            Por que ServiceFlow Oficina é diferente
-          </h2>
-        </motion.div>
+        <ScrollReveal direction="up" duration={600}>
+          <div className="text-center mb-16">
+            <h2 className="font-display text-4xl sm:text-5xl md:text-6xl uppercase">
+              Por que ServiceFlow Oficina é diferente
+            </h2>
+          </div>
+        </ScrollReveal>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 lg:gap-8">
           {diffs.map((diff, index) => (
-            <motion.div
-              key={index}
-              initial={{ opacity: 0, scale: 0.95 }}
-              whileInView={{ opacity: 1, scale: 1 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.4, delay: index * 0.1 }}
-              className="bg-secondary text-offwhite p-8 md:p-10 border-2 border-transparent hover:border-black transition-colors"
-            >
-              <div className="flex items-center gap-4 mb-6">
-                <div className="p-3 bg-primary text-secondary">
-                  <diff.icon size={28} />
+            <ScrollReveal key={index} direction="up" delay={index * 150} duration={600}>
+              <div className="bg-secondary text-offwhite p-8 md:p-10 border-2 border-transparent hover:border-black transition-colors h-full">
+                <div className="flex items-center gap-4 mb-6">
+                  <div className="p-3 bg-primary text-secondary">
+                    <diff.icon size={28} />
+                  </div>
+                  <h3 className="font-display text-2xl m-0 leading-tight">{diff.title}</h3>
                 </div>
-                <h3 className="font-display text-2xl m-0 leading-tight">{diff.title}</h3>
+                <p className="text-gray-400 text-lg leading-relaxed">{diff.description}</p>
               </div>
-              <p className="text-gray-400 text-lg leading-relaxed">
-                {diff.description}
-              </p>
-            </motion.div>
+            </ScrollReveal>
           ))}
         </div>
       </div>

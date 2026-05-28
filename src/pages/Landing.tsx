@@ -10,6 +10,7 @@ import { Footer } from '../components/Footer';
 import { FloatingWhatsApp } from '../components/FloatingWhatsApp';
 import { LeadModal } from '../components/LeadModal';
 import { Tracking } from '../components/Tracking';
+import { ProgressiveBlur } from '../components/ProgressiveBlur';
 
 export function Landing() {
   const [isLeadModalOpen, setIsLeadModalOpen] = useState(false);
@@ -27,6 +28,7 @@ export function Landing() {
       <Footer />
       <FloatingWhatsApp />
       <LeadModal isOpen={isLeadModalOpen} onClose={() => setIsLeadModalOpen(false)} />
+      <ProgressiveBlur />
     </div>
   );
 }

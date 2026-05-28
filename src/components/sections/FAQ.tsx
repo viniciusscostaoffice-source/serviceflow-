@@ -1,6 +1,7 @@
 import { useState } from 'react';
-import { motion, AnimatePresence } from 'motion/react';
+import { AnimatePresence, motion } from 'motion/react';
 import { ChevronDown } from 'lucide-react';
+import { ScrollReveal } from '../ScrollReveal';
 
 const faqs = [
   {
@@ -35,56 +36,47 @@ export function FAQ() {
   return (
     <section className="py-24 px-4 sm:px-6 lg:px-8 bg-offwhite text-secondary">
       <div className="max-w-4xl mx-auto">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.5 }}
-          className="text-center mb-16"
-        >
-          <h2 className="font-display text-4xl sm:text-5xl md:text-6xl text-secondary">
-            Perguntas que todo dono faz
-          </h2>
-        </motion.div>
+        <ScrollReveal direction="up" duration={600}>
+          <div className="text-center mb-16">
+            <h2 className="font-display text-4xl sm:text-5xl md:text-6xl text-secondary">
+              Perguntas que todo dono faz
+            </h2>
+          </div>
+        </ScrollReveal>
 
         <div className="space-y-4">
           {faqs.map((faq, index) => {
             const isOpen = openIndex === index;
             return (
-              <motion.div 
-                key={index}
-                initial={{ opacity: 0, y: 10 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.3, delay: index * 0.05 }}
-                className="border border-gray-300 bg-white"
-              >
-                <button
-                  onClick={() => setOpenIndex(isOpen ? null : index)}
-                  className="w-full px-6 py-5 flex justify-between items-center text-left hover:bg-gray-50 transition-colors"
-                >
-                  <span className="font-display text-xl text-secondary">{faq.q}</span>
-                  <ChevronDown 
-                    size={24} 
-                    className={`text-primary transition-transform duration-300 ${isOpen ? 'rotate-180' : ''}`} 
-                  />
-                </button>
-                <AnimatePresence>
-                  {isOpen && (
-                     <motion.div
-                      initial={{ height: 0, opacity: 0 }}
-                      animate={{ height: "auto", opacity: 1 }}
-                      exit={{ height: 0, opacity: 0 }}
-                      transition={{ duration: 0.3, ease: "easeInOut" }}
-                      className="overflow-hidden"
-                     >
-                       <div className="px-6 pb-6 pt-0 text-gray-600 leading-relaxed">
-                         {faq.a}
-                       </div>
-                     </motion.div>
-                  )}
-                </AnimatePresence>
-              </motion.div>
+              <ScrollReveal key={index} direction="up" delay={index * 60} duration={500}>
+                <div className="border border-gray-300 bg-white">
+                  <button
+                    onClick={() => setOpenIndex(isOpen ? null : index)}
+                    className="w-full px-6 py-5 flex justify-between items-center text-left hover:bg-gray-50 transition-colors"
+                  >
+                    <span className="font-display text-xl text-secondary">{faq.q}</span>
+                    <ChevronDown
+                      size={24}
+                      className={`text-primary transition-transform duration-300 ${isOpen ? 'rotate-180' : ''}`}
+                    />
+                  </button>
+                  <AnimatePresence>
+                    {isOpen && (
+                      <motion.div
+                        initial={{ height: 0, opacity: 0 }}
+                        animate={{ height: 'auto', opacity: 1 }}
+                        exit={{ height: 0, opacity: 0 }}
+                        transition={{ duration: 0.3, ease: 'easeInOut' }}
+                        className="overflow-hidden"
+                      >
+                        <div className="px-6 pb-6 pt-0 text-gray-600 leading-relaxed">
+                          {faq.a}
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
+              </ScrollReveal>
             );
           })}
         </div>
