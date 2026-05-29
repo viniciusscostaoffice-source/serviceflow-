@@ -7,9 +7,11 @@ export interface BillingState {
   status: AccessStatus;
   allowed: boolean;
   daysRemaining: number | null;
-  warning: boolean;         // true se faltar <= 3 dias
+  warning: boolean;
   trialEndsAt: string | null;
   accessExpiresAt: string | null;
+  plan: string;
+  mecanicosLimit: number;
 }
 
 export interface PixData {
@@ -41,6 +43,8 @@ export function useBilling() {
     warning: false,
     trialEndsAt: null,
     accessExpiresAt: null,
+    plan: 'basico',
+    mecanicosLimit: 3,
   });
   const [pixData, setPixData] = useState<PixData | null>(null);
   const [pixLoading, setPixLoading] = useState(false);
@@ -73,6 +77,8 @@ export function useBilling() {
         warning:         data.warning ?? false,
         trialEndsAt:     data.trial_ends_at ?? null,
         accessExpiresAt: data.access_expires_at ?? null,
+        plan:            data.plan ?? 'basico',
+        mecanicosLimit:  data.mecanicos_limit ?? 3,
       });
     } catch (err) {
       console.error('[useBilling] checkAccess:', err);

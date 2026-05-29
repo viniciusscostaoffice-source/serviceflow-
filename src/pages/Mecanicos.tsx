@@ -8,6 +8,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, Dialog
 import { Plus, Search, Phone, ChevronRight, Check, Pencil, X, Trash2, MessageCircle } from 'lucide-react';
 import { toast } from 'sonner';
 import { useAppContext } from '../lib/AppContext';
+import { useBilling } from '../lib/useBilling';
 
 function ComissaoInline({ mecId, value, onSave }: { mecId: number; value: number; onSave: (id: number, v: number) => void }) {
   const [editing, setEditing] = useState(false);
@@ -149,6 +150,8 @@ function TelefoneInline({ mecId, value, onSave }: { mecId: number; value: string
 
 export function Mecanicos() {
   const { mecanicos, atualizarComissao, atualizarTelefone, excluirMecanico, ordens, adicionarMecanico } = useAppContext();
+  const { billing } = useBilling();
+  const noLimite = mecanicos.length >= billing.mecanicosLimit;
   const [isInviteOpen, setIsInviteOpen] = useState(false);
   const [invitePhone, setInvitePhone] = useState('');
   const [inviteName, setInviteName] = useState('');
@@ -169,6 +172,11 @@ export function Mecanicos() {
 
   async function handleInvite(e: React.FormEvent) {
     e.preventDefault();
+    if (noLimite) {
+      const nomeP = billing.plan.charAt(0).toUpperCase() + billing.plan.slice(1);
+      toast.error(`Plano ${nomeP} permite até ${billing.mecanicosLimit} mecânicos. Faça upgrade para adicionar mais.`);
+      return;
+    }
     const comissao = parseFloat(inviteComissao);
     if (isNaN(comissao) || comissao < 0 || comissao > 100) {
       toast.error('Comissão deve ser entre 0 e 100.');
@@ -243,9 +251,9 @@ export function Mecanicos() {
         </div>
 
         <Dialog open={isInviteOpen} onOpenChange={setIsInviteOpen}>
-          <DialogTrigger render={<Button className="bg-primary hover:bg-[#E55A15] text-white" />}>
+          <DialogTrigger render={<Button className="bg-primary hover:bg-[#E55A15] text-white" disabled={noLimite} title={noLimite ? `Limite do plano atingido (${billing.mecanicosLimit} mecânicos)` : undefined} />}>
             <Plus className="mr-2" size={20} />
-            Convidar Mecânico
+            {noLimite ? `Limite atingido (${mecanicos.length}/${billing.mecanicosLimit})` : 'Convidar Mecânico'}
           </DialogTrigger>
           <DialogContent>
             <DialogHeader>

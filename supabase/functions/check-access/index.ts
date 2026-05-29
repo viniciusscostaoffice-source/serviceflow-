@@ -7,13 +7,21 @@ const corsHeaders = {
 
 export type AccessStatus = 'trial' | 'active' | 'payment_pending' | 'blocked';
 
+const LIMITE_POR_PLANO: Record<string, number> = {
+  basico:       3,
+  profissional: 10,
+  premium:      999,
+};
+
 export interface AccessResponse {
   allowed: boolean;
   status: AccessStatus;
   trial_ends_at: string | null;
   access_expires_at: string | null;
-  days_remaining: number | null;  // dias restantes de trial ou de acesso pago
-  warning: boolean;               // true se faltar <= 3 dias
+  days_remaining: number | null;
+  warning: boolean;
+  plan: string;
+  mecanicos_limit: number;
 }
 
 Deno.serve(async (req) => {
@@ -99,6 +107,19 @@ Deno.serve(async (req) => {
 
     const warning = allowed && daysRemaining !== null && daysRemaining <= 3;
 
+    // Buscar plano da invoice mais recente paga
+    const { data: invoice } = await supabase
+      .from('invoices')
+      .select('plan_name')
+      .eq('user_id', userId)
+      .eq('status', 'paid')
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .single();
+
+    const plan = invoice?.plan_name ?? 'basico';
+    const mecanicosLimit = LIMITE_POR_PLANO[plan] ?? 3;
+
     const response: AccessResponse = {
       allowed,
       status,
@@ -106,6 +127,8 @@ Deno.serve(async (req) => {
       access_expires_at: profile.access_expires_at,
       days_remaining:    daysRemaining,
       warning,
+      plan,
+      mecanicos_limit:   mecanicosLimit,
     };
 
     return new Response(JSON.stringify(response), {
