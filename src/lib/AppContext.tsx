@@ -164,12 +164,21 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setMecanicos((prev) => prev.filter((m) => m.id !== mecanicoId));
   }, []);
 
+  async function getUserId(): Promise<string> {
+    const cached = localStorage.getItem('sf_user_id');
+    if (cached) return cached;
+    const { data } = await supabase.auth.getSession();
+    return data.session?.user?.id ?? '';
+  }
+
   const adicionarMecanico = useCallback(async (nome: string, fone: string, comissaoPadrao: number) => {
-    await supabase.from('mecanicos').insert({ nome, fone, comissao_padrao: comissaoPadrao, status: 'Ativo' });
+    const uid = await getUserId();
+    await supabase.from('mecanicos').insert({ nome, fone, comissao_padrao: comissaoPadrao, status: 'Ativo', user_id: uid });
     await carregar();
   }, []);
 
   const adicionarOS = useCallback(async (input: NovaOSInput) => {
+    const uid = await getUserId();
     await supabase.from('ordens_servico').insert({
       cliente:             input.cliente,
       veiculo:             input.veiculo,
@@ -185,14 +194,15 @@ export function AppProvider({ children }: { children: ReactNode }) {
       comissao_ajudante:   input.comissaoAjudante,
       status:              'aberta',
       data:                new Date().toISOString().slice(0, 10),
+      user_id:             uid,
     });
     await carregar();
   }, []);
 
   const editarOS = useCallback(async (input: EditarOSInput) => {
     const { id, maoDeObra, pecas, motivo, comissaoPadrao, ajudanteId, percentualAjudante } = input;
+    const uid = await getUserId();
 
-    // Recalcula mantendo a divisão do ajudante se houver
     const comissaoTotal    = (maoDeObra * comissaoPadrao) / 100;
     const comissaoAjudante = ajudanteId ? comissaoTotal * (percentualAjudante / 100) : 0;
     const comissaoMecanico = comissaoTotal - comissaoAjudante;
@@ -205,10 +215,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       comissao_ajudante:   comissaoAjudante,
     }).eq('id', id);
 
-    await supabase.from('edicoes_os').insert({
-      os_id:  id,
-      motivo,
-    });
+    await supabase.from('edicoes_os').insert({ os_id: id, motivo, user_id: uid });
 
     await supabase.from('pendencias').insert({
       os_id:      id,
@@ -216,6 +223,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       descricao:  motivo,
       severidade: 'media',
       resolvida:  false,
+      user_id:    uid,
     });
 
     await carregar();
