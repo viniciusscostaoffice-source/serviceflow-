@@ -20,6 +20,18 @@ import { Signup } from './pages/auth/Signup';
 import { Onboarding } from './pages/auth/Onboarding';
 import { supabase } from './lib/supabase';
 
+function syncUserData(user: { id: string; email?: string; user_metadata?: Record<string, string> }) {
+  const meta = user.user_metadata ?? {};
+  const nome = meta.nome ?? meta.full_name ?? meta.name ?? '';
+  const oficina = meta.oficina ?? '';
+  const avatar = meta.avatar_url ?? meta.picture ?? '';
+  if (nome) localStorage.setItem('sf_usuario', nome);
+  if (oficina) localStorage.setItem('sf_oficina', oficina);
+  if (avatar) localStorage.setItem('sf_avatar', avatar);
+  if (user.email) localStorage.setItem('sf_email', user.email);
+  if (user.id) localStorage.setItem('sf_user_id', user.id);
+}
+
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const [checking, setChecking] = useState(true);
   const [authed, setAuthed] = useState(false);
@@ -28,9 +40,11 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
     supabase.auth.getSession().then(({ data }) => {
       setAuthed(!!data.session);
       setChecking(false);
+      if (data.session?.user) syncUserData(data.session.user);
     });
     const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
       setAuthed(!!session);
+      if (session?.user) syncUserData(session.user);
     });
     return () => listener.subscription.unsubscribe();
   }, []);

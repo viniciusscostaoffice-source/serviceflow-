@@ -28,11 +28,15 @@ export function Login() {
       return;
     }
 
-    // Salvar dados no localStorage para exibição e billing
-    const nome = data.user?.user_metadata?.nome ?? '';
-    const oficina = data.user?.user_metadata?.oficina ?? '';
+    // Salvar dados no localStorage — compatível com login Google e email/senha
+    const meta = data.user?.user_metadata ?? {};
+    const nome = meta.nome ?? meta.full_name ?? meta.name ?? '';
+    const oficina = meta.oficina ?? '';
+    const avatar = meta.avatar_url ?? meta.picture ?? '';
     if (nome) localStorage.setItem('sf_usuario', nome);
     if (oficina) localStorage.setItem('sf_oficina', oficina);
+    if (avatar) localStorage.setItem('sf_avatar', avatar);
+    if (data.user?.email) localStorage.setItem('sf_email', data.user.email);
     if (data.user?.id) localStorage.setItem('sf_user_id', data.user.id);
 
     toast.success('Bem-vindo de volta!');

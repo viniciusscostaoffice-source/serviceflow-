@@ -213,6 +213,8 @@ function AssinaturaModal({ onClose }: { onClose: () => void }) {
 export function Configuracoes() {
   const nomeOficina = localStorage.getItem('sf_oficina') || '';
   const nomeUsuario = localStorage.getItem('sf_usuario') || '';
+  const emailUsuario = localStorage.getItem('sf_email') || '';
+  const avatarUrl = localStorage.getItem('sf_avatar') || '';
 
   const [oficina, setOficina] = useState(nomeOficina);
   const [cnpj, setCnpj] = useState('');
@@ -274,15 +276,19 @@ export function Configuracoes() {
             </CardHeader>
             <CardContent>
               <div className="flex items-center gap-3 p-3 border rounded-lg bg-gray-50">
-                <div className="w-10 h-10 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold text-sm shrink-0">
-                  {nomeUsuario.split(' ').map(n => n[0]).slice(0, 2).join('').toUpperCase() || '?'}
-                </div>
+                {avatarUrl ? (
+                  <img src={avatarUrl} alt={nomeUsuario} className="w-10 h-10 rounded-full object-cover ring-2 ring-primary/20 shrink-0" />
+                ) : (
+                  <div className="w-10 h-10 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold text-sm shrink-0">
+                    {nomeUsuario.split(' ').map(n => n[0]).slice(0, 2).join('').toUpperCase() || '?'}
+                  </div>
+                )}
                 <div className="flex-1 min-w-0">
                   <p className="font-bold text-sm flex items-center gap-1.5 truncate">
                     {nomeUsuario || 'Usuário'}
                     <Shield size={13} className="text-primary shrink-0" />
                   </p>
-                  <p className="text-xs text-gray-500">Admin</p>
+                  <p className="text-xs text-gray-500 truncate">{emailUsuario || 'Admin'}</p>
                 </div>
                 <span className="text-xs text-gray-400 shrink-0">Você</span>
               </div>

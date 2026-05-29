@@ -40,6 +40,7 @@ export function DashboardLayout() {
   const { billing } = useBilling();
   const nomeOficina = localStorage.getItem('sf_oficina') || 'Minha Oficina';
   const nomeUsuario = localStorage.getItem('sf_usuario') || 'Usuário';
+  const avatarUrl = localStorage.getItem('sf_avatar') || '';
   const iniciaisUsuario = nomeUsuario.split(' ').map(n => n[0]).slice(0, 2).join('').toUpperCase();
 
   async function handleLogout() {
@@ -47,6 +48,8 @@ export function DashboardLayout() {
     localStorage.removeItem('sf_oficina');
     localStorage.removeItem('sf_usuario');
     localStorage.removeItem('sf_user_id');
+    localStorage.removeItem('sf_avatar');
+    localStorage.removeItem('sf_email');
     toast.success('Sessão encerrada. Até logo!');
     navigate('/login');
   }
@@ -155,9 +158,13 @@ export function DashboardLayout() {
               <div className="text-sm font-medium leading-tight">{nomeUsuario}</div>
               <div className="text-xs text-gray-500">Gerente</div>
             </div>
-            <div className="h-9 w-9 bg-primary/10 text-primary rounded-full flex items-center justify-center font-bold text-sm">
-              {iniciaisUsuario}
-            </div>
+            {avatarUrl ? (
+              <img src={avatarUrl} alt={nomeUsuario} className="h-9 w-9 rounded-full object-cover ring-2 ring-primary/20" />
+            ) : (
+              <div className="h-9 w-9 bg-primary/10 text-primary rounded-full flex items-center justify-center font-bold text-sm">
+                {iniciaisUsuario}
+              </div>
+            )}
           </div>
         </header>
 
