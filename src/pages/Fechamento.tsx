@@ -461,17 +461,15 @@ export function Fechamento() {
               </div>
             </div>
 
-            {/* Período */}
+            {/* Período + Calendário */}
             <div className="flex-1 min-w-[220px] space-y-1">
-              <label className="text-xs font-bold uppercase tracking-wider text-gray-400">
-                Período
-              </label>
-              <div className="flex gap-2 flex-wrap items-center">
+              <label className="text-xs font-bold uppercase tracking-wider text-gray-400">Período</label>
+              <div className="flex gap-1.5 flex-wrap items-center">
                 {(Object.keys(PERIODO_LABELS) as Periodo[]).map((p) => (
                   <button
                     key={p}
                     onClick={() => { setPeriodo(p); setDataEspecifica(null); setCalAberto(false); }}
-                    className={`px-4 py-2 rounded-lg text-sm font-bold transition-all border ${
+                    className={`px-3 py-2 rounded-lg text-sm font-bold transition-all border ${
                       periodo === p && !dataEspecifica
                         ? 'bg-primary text-white border-primary shadow-[0_2px_12px_rgba(255,107,26,0.25)]'
                         : 'bg-white text-gray-600 border-gray-200 hover:border-primary/40'
@@ -481,6 +479,9 @@ export function Fechamento() {
                   </button>
                 ))}
 
+                {/* Separador */}
+                <div className="h-6 w-px bg-gray-200 mx-1" />
+
                 {/* Botão calendário */}
                 <div className="relative">
                   <button
@@ -488,21 +489,27 @@ export function Fechamento() {
                     className={`px-3 py-2 rounded-lg text-sm font-bold transition-all border flex items-center gap-1.5 ${
                       dataEspecifica
                         ? 'bg-primary text-white border-primary shadow-[0_2px_12px_rgba(255,107,26,0.25)]'
-                        : 'bg-white text-gray-600 border-gray-200 hover:border-primary/40'
+                        : calAberto
+                        ? 'bg-gray-100 text-gray-700 border-gray-300'
+                        : 'bg-white text-gray-500 border-gray-200 hover:border-primary/40 hover:text-primary'
                     }`}
                   >
-                    <CalendarDays size={15} />
-                    {dataEspecifica ? dataEspecifica.toLocaleDateString('pt-BR') : 'Dia'}
+                    <CalendarDays size={14} />
+                    <span>{dataEspecifica ? dataEspecifica.toLocaleDateString('pt-BR') : 'Data'}</span>
                   </button>
 
                   {calAberto && (
-                    <div className="absolute top-full mt-2 left-0 z-50">
-                      <Calendario
-                        dataSelecionada={dataEspecifica}
-                        onChange={selecionarData}
-                        onClear={limparData}
-                      />
-                    </div>
+                    <>
+                      {/* Overlay para fechar clicando fora */}
+                      <div className="fixed inset-0 z-40" onClick={() => setCalAberto(false)} />
+                      <div className="absolute top-full mt-2 left-0 z-50">
+                        <Calendario
+                          dataSelecionada={dataEspecifica}
+                          onChange={selecionarData}
+                          onClear={limparData}
+                        />
+                      </div>
+                    </>
                   )}
                 </div>
               </div>
