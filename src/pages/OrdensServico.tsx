@@ -8,7 +8,7 @@ import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from '../components/ui/table';
 import { useAppContext } from '../lib/AppContext';
-import { mecanicos, type StatusOS } from '../lib/mockData';
+import type { StatusOS } from '../lib/mockData';
 
 const STATUS_LABELS: Record<StatusOS, string> = {
   aberta:       'Aberta',
@@ -36,7 +36,7 @@ function formatBRL(v: number) {
 }
 
 export function OrdensServico() {
-  const { ordens } = useAppContext();
+  const { ordens, mecanicos } = useAppContext();
   const [search, setSearch] = useState('');
   const [filterStatus, setFilterStatus] = useState<StatusOS | ''>('');
   const [filterMecanico, setFilterMecanico] = useState<string>('');
@@ -117,7 +117,7 @@ export function OrdensServico() {
         >
           <option value="">Todos os mecânicos</option>
           {mecanicos.map((m) => (
-            <option key={m.id} value={m.nome.split(' ')[0]}>{m.nome.split(' ')[0]}</option>
+            <option key={m.id} value={m.nome}>{m.nome.split(' ')[0]}</option>
           ))}
         </select>
 
