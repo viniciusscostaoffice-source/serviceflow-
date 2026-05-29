@@ -251,10 +251,20 @@ export function Mecanicos() {
         </div>
 
         <Dialog open={isInviteOpen} onOpenChange={setIsInviteOpen}>
-          <DialogTrigger render={<Button className="bg-primary hover:bg-[#E55A15] text-white" disabled={noLimite} title={noLimite ? `Limite do plano atingido (${billing.mecanicosLimit} mecânicos)` : undefined} />}>
-            <Plus className="mr-2" size={20} />
-            {noLimite ? `Limite atingido (${mecanicos.length}/${billing.mecanicosLimit})` : 'Convidar Mecânico'}
-          </DialogTrigger>
+          {noLimite ? (
+            <div className="flex flex-col items-end gap-0.5">
+              <Button disabled className="bg-primary/60 text-white cursor-not-allowed">
+                <Plus className="mr-2" size={20} />
+                Limite atingido ({mecanicos.length}/{billing.mecanicosLimit})
+              </Button>
+              <span className="text-xs text-primary font-medium">Para adicionar mais, faça upgrade do plano</span>
+            </div>
+          ) : (
+            <DialogTrigger render={<Button className="bg-primary hover:bg-[#E55A15] text-white" />}>
+              <Plus className="mr-2" size={20} />
+              Convidar Mecânico
+            </DialogTrigger>
+          )}
           <DialogContent>
             <DialogHeader>
               <DialogTitle className="uppercase font-display">Adicionar Mecânico</DialogTitle>
