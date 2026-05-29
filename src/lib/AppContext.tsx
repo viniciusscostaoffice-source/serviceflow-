@@ -165,8 +165,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
   }, []);
 
   async function getUserId(): Promise<string> {
-    const cached = localStorage.getItem('sf_user_id');
-    if (cached) return cached;
     const { data } = await supabase.auth.getSession();
     return data.session?.user?.id ?? '';
   }

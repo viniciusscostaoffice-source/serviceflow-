@@ -47,7 +47,6 @@ export function DashboardLayout() {
     await supabase.auth.signOut();
     localStorage.removeItem('sf_oficina');
     localStorage.removeItem('sf_usuario');
-    localStorage.removeItem('sf_user_id');
     localStorage.removeItem('sf_avatar');
     localStorage.removeItem('sf_email');
     toast.success('Sessão encerrada. Até logo!');

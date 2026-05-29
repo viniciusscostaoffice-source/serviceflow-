@@ -25,14 +25,8 @@ export interface PixData {
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL as string;
 
 async function getUserId(): Promise<string> {
-  // Tenta do localStorage primeiro (mais rápido)
-  const cached = localStorage.getItem('sf_user_id');
-  if (cached) return cached;
-  // Fallback: busca direto da sessão do Supabase
   const { data } = await supabase.auth.getSession();
-  const id = data.session?.user?.id ?? '';
-  if (id) localStorage.setItem('sf_user_id', id);
-  return id;
+  return data.session?.user?.id ?? '';
 }
 
 export function useBilling() {

@@ -33,11 +33,11 @@ export function Login() {
     const nome = meta.nome ?? meta.full_name ?? meta.name ?? '';
     const oficina = meta.oficina ?? '';
     const avatar = meta.avatar_url ?? meta.picture ?? '';
+    // Apenas dados de exibição — nunca user_id no localStorage
     if (nome) localStorage.setItem('sf_usuario', nome);
     if (oficina) localStorage.setItem('sf_oficina', oficina);
     if (avatar) localStorage.setItem('sf_avatar', avatar);
     if (data.user?.email) localStorage.setItem('sf_email', data.user.email);
-    if (data.user?.id) localStorage.setItem('sf_user_id', data.user.id);
 
     toast.success('Bem-vindo de volta!');
     navigate('/dashboard');
