@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card'
 import { Button } from '../components/ui/button';
 import { Badge } from '../components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../components/ui/table';
-import { Download, CheckCircle2 } from 'lucide-react';
+import { Download, CheckCircle2, CalendarDays, ChevronLeft, ChevronRight, X } from 'lucide-react';
 import { toast } from 'sonner';
 import { useAppContext } from '../lib/AppContext';
 import type { OS } from '../lib/mockData';
@@ -29,25 +29,118 @@ const PERIODO_LABELS: Record<Periodo, string> = {
   ano: 'Este ano',
 };
 
-function filtrarPorPeriodo(lista: OS[], periodo: Periodo): OS[] {
+const MESES = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+const DIAS_SEMANA = ['D','S','T','Q','Q','S','S'];
+
+function Calendario({ dataSelecionada, onChange, onClear }: {
+  dataSelecionada: Date | null;
+  onChange: (d: Date) => void;
+  onClear: () => void;
+}) {
+  const hoje = new Date();
+  const [mes, setMes] = useState(dataSelecionada?.getMonth() ?? hoje.getMonth());
+  const [ano, setAno] = useState(dataSelecionada?.getFullYear() ?? hoje.getFullYear());
+
+  function anteriorMes() {
+    if (mes === 0) { setMes(11); setAno(a => a - 1); }
+    else setMes(m => m - 1);
+  }
+  function proximoMes() {
+    if (mes === 11) { setMes(0); setAno(a => a + 1); }
+    else setMes(m => m + 1);
+  }
+
+  const primeiroDia = new Date(ano, mes, 1).getDay();
+  const diasNoMes = new Date(ano, mes + 1, 0).getDate();
+  const celulas = Array.from({ length: primeiroDia + diasNoMes }, (_, i) =>
+    i < primeiroDia ? null : i - primeiroDia + 1
+  );
+
+  function isSelecionado(dia: number) {
+    if (!dataSelecionada) return false;
+    return dataSelecionada.getDate() === dia &&
+      dataSelecionada.getMonth() === mes &&
+      dataSelecionada.getFullYear() === ano;
+  }
+
+  function isHoje(dia: number) {
+    return dia === hoje.getDate() && mes === hoje.getMonth() && ano === hoje.getFullYear();
+  }
+
+  return (
+    <div className="bg-white border border-gray-200 rounded-xl shadow-lg p-4 w-72 z-50">
+      {/* Navegação de mês */}
+      <div className="flex items-center justify-between mb-3">
+        <button onClick={anteriorMes} className="h-7 w-7 flex items-center justify-center rounded-lg hover:bg-gray-100 transition-colors">
+          <ChevronLeft size={16} />
+        </button>
+        <span className="text-sm font-bold text-secondary">{MESES[mes]} {ano}</span>
+        <button onClick={proximoMes} className="h-7 w-7 flex items-center justify-center rounded-lg hover:bg-gray-100 transition-colors">
+          <ChevronRight size={16} />
+        </button>
+      </div>
+
+      {/* Cabeçalho dias da semana */}
+      <div className="grid grid-cols-7 mb-1">
+        {DIAS_SEMANA.map((d, i) => (
+          <div key={i} className="text-center text-[10px] font-bold text-gray-400 py-1">{d}</div>
+        ))}
+      </div>
+
+      {/* Dias */}
+      <div className="grid grid-cols-7 gap-0.5">
+        {celulas.map((dia, i) => (
+          <div key={i}>
+            {dia ? (
+              <button
+                onClick={() => onChange(new Date(ano, mes, dia))}
+                className={`w-full aspect-square flex items-center justify-center text-sm rounded-lg font-medium transition-all ${
+                  isSelecionado(dia)
+                    ? 'bg-primary text-white shadow-[0_2px_8px_rgba(255,107,26,0.4)]'
+                    : isHoje(dia)
+                    ? 'border-2 border-primary text-primary font-bold'
+                    : 'hover:bg-primary/10 text-gray-700'
+                }`}
+              >
+                {dia}
+              </button>
+            ) : <div />}
+          </div>
+        ))}
+      </div>
+
+      {/* Limpar */}
+      {dataSelecionada && (
+        <button
+          onClick={onClear}
+          className="mt-3 w-full flex items-center justify-center gap-1 text-xs text-gray-400 hover:text-red-500 transition-colors"
+        >
+          <X size={12} /> Limpar data
+        </button>
+      )}
+    </div>
+  );
+}
+
+function filtrarPorPeriodo(lista: OS[], periodo: Periodo, dataEspecifica: Date | null): OS[] {
+  if (dataEspecifica) {
+    return lista.filter((os) => {
+      const d = new Date(os.data + 'T00:00:00');
+      return d.toDateString() === dataEspecifica.toDateString();
+    });
+  }
   const agora = new Date();
   return lista.filter((os) => {
     const d = new Date(os.data + 'T00:00:00');
-    if (periodo === 'dia') {
-      return d.toDateString() === agora.toDateString();
-    }
+    if (periodo === 'dia') return d.toDateString() === agora.toDateString();
     if (periodo === 'semana') {
       const inicio = new Date(agora);
       inicio.setDate(agora.getDate() - agora.getDay());
       inicio.setHours(0, 0, 0, 0);
       return d >= inicio;
     }
-    if (periodo === 'mes') {
-      return d.getMonth() === agora.getMonth() && d.getFullYear() === agora.getFullYear();
-    }
-    if (periodo === 'ano') {
-      return d.getFullYear() === agora.getFullYear();
-    }
+    if (periodo === 'mes') return d.getMonth() === agora.getMonth() && d.getFullYear() === agora.getFullYear();
+    if (periodo === 'ano') return d.getFullYear() === agora.getFullYear();
     return true;
   });
 }
@@ -300,6 +393,8 @@ export function Fechamento() {
   const { ordens, mecanicos } = useAppContext();
   const [mecId, setMecId] = useState<number>(mecanicos[0]?.id ?? 1);
   const [periodo, setPeriodo] = useState<Periodo>('mes');
+  const [dataEspecifica, setDataEspecifica] = useState<Date | null>(null);
+  const [calAberto, setCalAberto] = useState(false);
 
   const mecSelecionado = mecanicos.find((m) => m.id === mecId);
 
@@ -309,14 +404,26 @@ export function Fechamento() {
   );
 
   const osFiltradas = useMemo(
-    () => filtrarPorPeriodo(osDoMecanico, periodo),
-    [osDoMecanico, periodo],
+    () => filtrarPorPeriodo(osDoMecanico, periodo, dataEspecifica),
+    [osDoMecanico, periodo, dataEspecifica],
   );
 
   const resumo = useMemo(() => calcularResumo(osFiltradas), [osFiltradas]);
 
-  const periodoLabel = PERIODO_LABELS[periodo];
+  const periodoLabel = dataEspecifica
+    ? dataEspecifica.toLocaleDateString('pt-BR')
+    : PERIODO_LABELS[periodo];
   const mecNome = mecSelecionado?.nome ?? 'Mecânico';
+
+  function selecionarData(d: Date) {
+    setDataEspecifica(d);
+    setCalAberto(false);
+  }
+
+  function limparData() {
+    setDataEspecifica(null);
+    setCalAberto(false);
+  }
 
   return (
     <div className="space-y-6">
@@ -359,13 +466,13 @@ export function Fechamento() {
               <label className="text-xs font-bold uppercase tracking-wider text-gray-400">
                 Período
               </label>
-              <div className="flex gap-2 flex-wrap">
+              <div className="flex gap-2 flex-wrap items-center">
                 {(Object.keys(PERIODO_LABELS) as Periodo[]).map((p) => (
                   <button
                     key={p}
-                    onClick={() => setPeriodo(p)}
+                    onClick={() => { setPeriodo(p); setDataEspecifica(null); setCalAberto(false); }}
                     className={`px-4 py-2 rounded-lg text-sm font-bold transition-all border ${
-                      periodo === p
+                      periodo === p && !dataEspecifica
                         ? 'bg-primary text-white border-primary shadow-[0_2px_12px_rgba(255,107,26,0.25)]'
                         : 'bg-white text-gray-600 border-gray-200 hover:border-primary/40'
                     }`}
@@ -373,6 +480,31 @@ export function Fechamento() {
                     {PERIODO_LABELS[p]}
                   </button>
                 ))}
+
+                {/* Botão calendário */}
+                <div className="relative">
+                  <button
+                    onClick={() => setCalAberto(v => !v)}
+                    className={`px-3 py-2 rounded-lg text-sm font-bold transition-all border flex items-center gap-1.5 ${
+                      dataEspecifica
+                        ? 'bg-primary text-white border-primary shadow-[0_2px_12px_rgba(255,107,26,0.25)]'
+                        : 'bg-white text-gray-600 border-gray-200 hover:border-primary/40'
+                    }`}
+                  >
+                    <CalendarDays size={15} />
+                    {dataEspecifica ? dataEspecifica.toLocaleDateString('pt-BR') : 'Dia'}
+                  </button>
+
+                  {calAberto && (
+                    <div className="absolute top-full mt-2 left-0 z-50">
+                      <Calendario
+                        dataSelecionada={dataEspecifica}
+                        onChange={selecionarData}
+                        onClear={limparData}
+                      />
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
 
