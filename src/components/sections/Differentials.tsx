@@ -1,11 +1,11 @@
-import { Smartphone, History, MessageSquareWarning, Blocks } from 'lucide-react';
+import { Smartphone, History, FileText, Blocks } from 'lucide-react';
 import { ScrollReveal } from '../ScrollReveal';
 
 const diffs = [
   {
     icon: Smartphone,
     title: "App do Mecânico no bolso",
-    description: "Único sistema do Brasil que dá app separado pro mecânico ver comissão em tempo real."
+    description: "App separado pro mecânico acompanhar comissão em tempo real, direto no celular."
   },
   {
     icon: History,
@@ -13,9 +13,9 @@ const diffs = [
     description: "Toda alteração fica registrada. Acabou desconfiança. O histórico prova tudo."
   },
   {
-    icon: MessageSquareWarning,
-    title: "Botão 'Discordo'",
-    description: "Mecânico pode contestar lançamento direto no app. Resolve treta antes de virar problema."
+    icon: FileText,
+    title: "Fechamento mensal com PDF",
+    description: "Gere relatório de comissões por mecânico com um clique e exporte em PDF."
   },
   {
     icon: Blocks,

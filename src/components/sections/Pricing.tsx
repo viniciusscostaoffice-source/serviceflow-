@@ -12,7 +12,7 @@ const plans = [
     features: [
       'Painel web pro gerente',
       'App mobile pro mecânico',
-      'Até 5 mecânicos cadastrados',
+      'Até 3 mecânicos cadastrados',
       'Histórico ilimitado',
       'Suporte por WhatsApp',
       'Atualizações grátis',
@@ -28,7 +28,7 @@ const plans = [
     features: [
       'Painel web pro gerente',
       'App mobile pro mecânico',
-      'Até 7 mecânicos cadastrados',
+      'Até 10 mecânicos cadastrados',
       'Histórico ilimitado',
       'Suporte prioritário por WhatsApp',
       'Atualizações grátis pra sempre',

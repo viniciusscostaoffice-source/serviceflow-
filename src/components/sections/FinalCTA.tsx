@@ -10,14 +10,13 @@ export function FinalCTA() {
       <div className="relative z-10 max-w-4xl mx-auto text-center space-y-10">
         <ScrollReveal direction="up" duration={600}>
           <h2 className="font-display text-5xl sm:text-6xl md:text-7xl uppercase shadow-black drop-shadow-sm">
-            50 vagas. Quando acabar, acabou.
+            Chega de briga por comissão.
           </h2>
         </ScrollReveal>
 
         <ScrollReveal direction="up" delay={150} duration={600}>
           <p className="text-xl sm:text-2xl font-medium text-black max-w-2xl mx-auto">
-            Depois do lançamento, o plano normal para novos assinantes vai ser R$ 89/mês.
-            Garante seu R$ 49 vitalício agora.
+            Comece grátis por 7 dias. Sem cartão agora. Cancele quando quiser.
           </p>
         </ScrollReveal>
 
@@ -34,9 +33,9 @@ export function FinalCTA() {
         </ScrollReveal>
 
         <ScrollReveal direction="none" delay={500} duration={600}>
-          <div className="inline-flex items-center justify-center gap-2 px-4 py-2 bg-black/10 rounded-full font-bold uppercase tracking-wider text-black">
-            <span className="text-xl animate-pulse">🔥</span> Restam 47 vagas de 50
-          </div>
+          <p className="text-sm text-black/60 font-medium">
+            🔒 Sem cobrança nos primeiros 7 dias. Garantia incondicional de 30 dias.
+          </p>
         </ScrollReveal>
       </div>
     </section>

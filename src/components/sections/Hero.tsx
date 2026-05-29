@@ -35,7 +35,7 @@ export function Hero({ onOpenModal }: HeroProps) {
           className="inline-flex items-center gap-2 px-4 py-2 bg-primary/10 border border-primary text-primary rounded-full text-xs sm:text-sm font-bold uppercase tracking-wider mx-auto"
         >
           <Wrench size={16} />
-          Pré-venda aberta — Vagas Limitadas
+          Gestão de comissões para oficinas
         </motion.div>
 
         <motion.h1 
@@ -64,15 +64,13 @@ export function Hero({ onOpenModal }: HeroProps) {
           transition={{ duration: 0.5, delay: 0.3 }}
           className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-4"
         >
-          <a
-            href={checkoutUrl}
-            target="_blank"
-            rel="noopener noreferrer"
+          <Link
+            to="/signup"
             className="w-full sm:w-auto px-8 py-5 bg-primary text-secondary font-display text-xl sm:text-2xl hover:bg-white hover:text-secondary transition-colors duration-300 flex items-center justify-center gap-3 uppercase cursor-pointer shadow-[0_0_20px_rgba(255,107,26,0.3)] hover:shadow-[0_0_30px_rgba(255,255,255,0.4)]"
           >
-            QUERO MEU 50% VITALÍCIO — R$ 49
+            COMEÇAR GRÁTIS — 7 DIAS
             <ArrowRight size={24} />
-          </a>
+          </Link>
           <button
             onClick={onOpenModal}
             className="w-full sm:w-auto px-8 py-5 bg-transparent border-2 border-offwhite text-offwhite font-display text-xl sm:text-2xl hover:bg-offwhite hover:text-secondary transition-colors duration-300 uppercase cursor-pointer"
@@ -87,7 +85,7 @@ export function Hero({ onOpenModal }: HeroProps) {
           transition={{ duration: 0.5, delay: 0.5 }}
           className="text-sm sm:text-base text-gray-500 font-medium"
         >
-          Apenas 50 vagas. Entrega em 60 dias. Garantia de 30 dias após entrega.
+          7 dias grátis, sem cartão. Cancele quando quiser.
         </motion.p>
       </div>
     </section>

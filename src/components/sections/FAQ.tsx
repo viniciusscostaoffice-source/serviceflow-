@@ -10,7 +10,7 @@ const faqs = [
   },
   {
     q: "Qual plano eu devo escolher?",
-    a: "Depende do tamanho da sua equipe. Até 5 mecânicos: Básico (R$ 59/mês). Até 7: Profissional (R$ 80/mês). Equipe maior ou quer suporte VIP e onboarding: Premium (R$ 120/mês). Todos têm os 7 dias grátis."
+    a: "Depende do tamanho da sua equipe. Até 3 mecânicos: Básico (R$ 59/mês). Até 10: Profissional (R$ 80/mês). Equipe maior ou quer suporte VIP e onboarding: Premium (R$ 120/mês). Todos têm os 7 dias grátis."
   },
   {
     q: "Preciso trocar meu sistema atual?",
