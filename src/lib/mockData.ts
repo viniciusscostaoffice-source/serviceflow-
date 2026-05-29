@@ -8,12 +8,16 @@ export interface OS {
   data: string; // ISO date string
   mecanico: string;
   mecanicoId: number;
+  ajudanteId: number | null;
+  percentualAjudante: number;
   cliente: string;
   veiculo: string;
   placa: string;
   totalPecas: number;
   totalMaoObra: number;
   comissao: number;
+  comissaoMecanico: number;
+  comissaoAjudante: number;
   status: StatusOS;
 }
 
@@ -51,14 +55,15 @@ export function filtrarPorMes(lista: OS[], ano: number, mes: number) {
 }
 
 export function somarComissaoPorMecanico(lista: OS[]) {
-  const mapa: Record<string, number> = {};
+  // Agrupa por mecanicoId para evitar colisões de nome
+  const mapa: Record<number, { name: string; comissao: number }> = {};
   for (const os of lista) {
     if (os.status === 'cancelada') continue;
-    mapa[os.mecanico] = (mapa[os.mecanico] ?? 0) + os.comissao;
+    if (!mapa[os.mecanicoId]) mapa[os.mecanicoId] = { name: os.mecanico, comissao: 0 };
+    // Usa comissaoMecanico (parte do mecânico principal, sem ajudante)
+    mapa[os.mecanicoId].comissao += os.comissaoMecanico ?? os.comissao;
   }
-  return Object.entries(mapa)
-    .map(([name, comissao]) => ({ name, comissao }))
-    .sort((a, b) => b.comissao - a.comissao);
+  return Object.values(mapa).sort((a, b) => b.comissao - a.comissao);
 }
 
 export function calcularKpis(lista: OS[]) {

@@ -249,7 +249,7 @@ export function Dashboard() {
               mecanicos
                 .filter((m) => m.status === 'Ativo')
                 .map((mec, idx) => {
-                  const dados = dadosGrafico.find((d) => d.name === mec.nome.split(' ')[0]);
+                  const dados = dadosGrafico.find((d) => d.name === mec.nome);
                   const comissao = dados?.comissao ?? 0;
                   const osCount = ordemMes.filter((os) => os.mecanicoId === mec.id && os.status !== 'cancelada').length;
                   const maxComissao = dadosGrafico[0]?.comissao ?? 1;

@@ -17,6 +17,17 @@ export interface NovaOSInput {
   comissaoAjudante: number;
 }
 
+export interface EditarOSInput {
+  id: number;
+  maoDeObra: number;
+  pecas: number;
+  motivo: string;
+  mecanicoId: number;
+  comissaoPadrao: number;
+  ajudanteId: number | null;
+  percentualAjudante: number;
+}
+
 interface AppContextValue {
   ordens: OS[];
   pendencias: Pendencia[];
@@ -29,7 +40,7 @@ interface AppContextValue {
   excluirMecanico: (mecanicoId: number) => Promise<void>;
   adicionarMecanico: (nome: string, fone: string, comissaoPadrao: number) => Promise<void>;
   adicionarOS: (input: NovaOSInput) => Promise<void>;
-  editarOS: (id: number, maoDeObra: number, pecas: number, motivo: string, mecanicoId: number, comissaoPadrao: number) => Promise<void>;
+  editarOS: (input: EditarOSInput) => Promise<void>;
   pendenciasAtivas: number;
   recarregar: () => void;
 }
@@ -39,18 +50,22 @@ const AppContext = createContext<AppContextValue | null>(null);
 // Mapeia snake_case do Supabase → camelCase do frontend
 function mapOS(row: Record<string, unknown>): OS {
   return {
-    id:           row.id as number,
-    num:          row.num as string,
-    data:         row.data as string,
-    mecanico:     (row.mecanicos as Record<string, unknown>)?.nome as string ?? '',
-    mecanicoId:   row.mecanico_id as number,
-    cliente:      row.cliente as string,
-    veiculo:      row.veiculo as string,
-    placa:        row.placa as string,
-    totalPecas:   Number(row.total_pecas),
-    totalMaoObra: Number(row.total_mao_obra),
-    comissao:     Number(row.comissao),
-    status:       row.status as OS['status'],
+    id:                 row.id as number,
+    num:                row.num as string,
+    data:               row.data as string,
+    mecanico:           (row.mecanicos as Record<string, unknown>)?.nome as string ?? '',
+    mecanicoId:         row.mecanico_id as number,
+    ajudanteId:         row.ajudante_id as number | null ?? null,
+    percentualAjudante: Number(row.percentual_ajudante ?? 0),
+    cliente:            row.cliente as string,
+    veiculo:            row.veiculo as string,
+    placa:              row.placa as string,
+    totalPecas:         Number(row.total_pecas),
+    totalMaoObra:       Number(row.total_mao_obra),
+    comissao:           Number(row.comissao),
+    comissaoMecanico:   Number(row.comissao_mecanico ?? row.comissao),
+    comissaoAjudante:   Number(row.comissao_ajudante ?? 0),
+    status:             row.status as OS['status'],
   };
 }
 
@@ -174,24 +189,20 @@ export function AppProvider({ children }: { children: ReactNode }) {
     await carregar();
   }, []);
 
-  const editarOS = useCallback(async (
-    id: number,
-    maoDeObra: number,
-    pecas: number,
-    motivo: string,
-    mecanicoId: number,
-    comissaoPadrao: number,
-  ) => {
-    const comissao         = (maoDeObra * comissaoPadrao) / 100;
-    const comissaoMecanico = comissao;
-    const comissaoAjudante = 0;
+  const editarOS = useCallback(async (input: EditarOSInput) => {
+    const { id, maoDeObra, pecas, motivo, comissaoPadrao, ajudanteId, percentualAjudante } = input;
+
+    // Recalcula mantendo a divisão do ajudante se houver
+    const comissaoTotal    = (maoDeObra * comissaoPadrao) / 100;
+    const comissaoAjudante = ajudanteId ? comissaoTotal * (percentualAjudante / 100) : 0;
+    const comissaoMecanico = comissaoTotal - comissaoAjudante;
 
     await supabase.from('ordens_servico').update({
-      total_mao_obra:    maoDeObra,
-      total_pecas:       pecas,
-      comissao,
-      comissao_mecanico: comissaoMecanico,
-      comissao_ajudante: comissaoAjudante,
+      total_mao_obra:      maoDeObra,
+      total_pecas:         pecas,
+      comissao:            comissaoTotal,
+      comissao_mecanico:   comissaoMecanico,
+      comissao_ajudante:   comissaoAjudante,
     }).eq('id', id);
 
     await supabase.from('edicoes_os').insert({
@@ -200,11 +211,11 @@ export function AppProvider({ children }: { children: ReactNode }) {
     });
 
     await supabase.from('pendencias').insert({
-      os_id:     id,
-      tipo:      'Edição de Valor',
-      descricao: motivo,
+      os_id:      id,
+      tipo:       'Edição de Valor',
+      descricao:  motivo,
       severidade: 'media',
-      resolvida: false,
+      resolvida:  false,
     });
 
     await carregar();

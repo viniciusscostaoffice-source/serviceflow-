@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, type FormEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
 import { Button } from '../components/ui/button';
@@ -33,9 +33,12 @@ export function OsNova() {
   const comissaoMecanico = comissaoTotal - comissaoAjudante;
   const valorTotal       = maoDeObra + pecas;
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     if (!mecanicoId) { toast.error('Selecione um mecânico.'); return; }
+    if (maoDeObra < 0) { toast.error('Valor de mão de obra não pode ser negativo.'); return; }
+    if (pecas < 0) { toast.error('Valor de peças não pode ser negativo.'); return; }
+    if (maoDeObra === 0 && pecas === 0) { toast.error('Informe ao menos um valor: mão de obra ou peças.'); return; }
     setSaving(true);
     try {
       await adicionarOS({

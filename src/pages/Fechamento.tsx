@@ -145,13 +145,19 @@ function filtrarPorPeriodo(lista: OS[], periodo: Periodo, dataEspecifica: Date |
   });
 }
 
-function calcularResumo(lista: OS[]) {
+function calcularResumo(lista: OS[], mecId?: number) {
   const ativas = lista.filter((os) => os.status !== 'cancelada');
   return {
     qtdOs: ativas.length,
     totalMaoObra: ativas.reduce((s, os) => s + os.totalMaoObra, 0),
     totalPecas: ativas.reduce((s, os) => s + os.totalPecas, 0),
-    totalComissao: ativas.reduce((s, os) => s + os.comissao, 0),
+    // Se filtrando por mecânico, usa comissaoMecanico (sem parte do ajudante)
+    totalComissao: ativas.reduce((s, os) => {
+      if (mecId !== undefined && os.mecanicoId === mecId) {
+        return s + (os.comissaoMecanico ?? os.comissao);
+      }
+      return s + os.comissao;
+    }, 0),
     totalFaturamento: ativas.reduce((s, os) => s + os.totalMaoObra + os.totalPecas, 0),
   };
 }
@@ -166,9 +172,9 @@ const STATUS_BADGE: Record<string, React.ReactElement> = {
 
 // ─── Export PDF ──────────────────────────────────────────────────────────────
 
-function exportarPDF(lista: OS[], mecNome: string, periodo: string, oficina = 'ServiceFlow Oficina') {
+function exportarPDF(lista: OS[], mecNome: string, periodo: string, mecId: number, oficina = 'ServiceFlow Oficina') {
   const ativas = lista.filter((os) => os.status !== 'cancelada');
-  const resumo = calcularResumo(lista);
+  const resumo = calcularResumo(lista, mecId);
   const geradoEm = new Date().toLocaleString('pt-BR');
   const slug = `fechamento-${mecNome.replace(/\s+/g, '-').toLowerCase()}-${periodo.replace(/\s+/g, '-').toLowerCase()}`;
 
@@ -255,7 +261,7 @@ function exportarPDF(lista: OS[], mecNome: string, periodo: string, oficina = 'S
       `${os.veiculo}\n${os.placa}`,
       formatBRL(os.totalMaoObra),
       formatBRL(os.totalPecas),
-      formatBRL(os.comissao),
+      formatBRL(os.comissaoMecanico ?? os.comissao),
       os.status.charAt(0).toUpperCase() + os.status.slice(1),
     ]),
     foot: [[
@@ -314,13 +320,13 @@ function exportarPDF(lista: OS[], mecNome: string, periodo: string, oficina = 'S
 
 // ─── Botão de export ─────────────────────────────────────────────────────────
 
-function BotaoExport({ lista, mecNome, periodo }: { lista: OS[]; mecNome: string; periodo: string }) {
+function BotaoExport({ lista, mecNome, periodo, mecId }: { lista: OS[]; mecNome: string; periodo: string; mecId: number }) {
   const ativas = lista.filter((os) => os.status !== 'cancelada');
   return (
     <Button
       size="sm"
       className="bg-primary hover:bg-[#E55A15] text-white gap-2 shadow-[0_2px_12px_rgba(255,107,26,0.25)]"
-      onClick={() => exportarPDF(lista, mecNome, periodo)}
+      onClick={() => exportarPDF(lista, mecNome, periodo, mecId)}
       disabled={ativas.length === 0}
     >
       <Download className="h-4 w-4" />
@@ -408,7 +414,7 @@ export function Fechamento() {
     [osDoMecanico, periodo, dataEspecifica],
   );
 
-  const resumo = useMemo(() => calcularResumo(osFiltradas), [osFiltradas]);
+  const resumo = useMemo(() => calcularResumo(osFiltradas, mecId), [osFiltradas, mecId]);
 
   const periodoLabel = dataEspecifica
     ? dataEspecifica.toLocaleDateString('pt-BR')
@@ -517,7 +523,7 @@ export function Fechamento() {
 
             {/* Export — alinhado à direita */}
             <div className="ml-auto pt-5">
-              <BotaoExport lista={osFiltradas} mecNome={mecNome} periodo={periodoLabel} />
+              <BotaoExport lista={osFiltradas} mecNome={mecNome} periodo={periodoLabel} mecId={mecId} />
             </div>
           </div>
         </CardContent>

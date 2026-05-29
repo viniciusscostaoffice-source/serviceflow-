@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, type FormEvent } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { Button } from '../components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
@@ -11,6 +11,7 @@ import { ArrowLeft, Edit, FileText, Wrench as WrenchIcon, AlertTriangle } from '
 import { toast } from 'sonner';
 import { supabase } from '../lib/supabase';
 import { useAppContext } from '../lib/AppContext';
+import type { EditarOSInput } from '../lib/AppContext';
 
 interface OSDetalhe {
   id: number;
@@ -24,6 +25,8 @@ interface OSDetalhe {
   mecanicoPrincipal: string;
   mecanicoId: number;
   ajudante: string | null;
+  ajudanteId: number | null;
+  percentualAjudante: number;
   maoDeObra: number;
   pecas: number;
   comissaoMecanico: number;
@@ -70,23 +73,25 @@ export function OsDetalhe() {
         .order('criado_em', { ascending: false });
 
       setOs({
-        id:                data.id,
-        num:               `#${data.num ?? data.id}`,
-        data:              new Date(data.data).toLocaleDateString('pt-BR'),
-        status:            data.status,
-        cliente:           data.cliente,
-        veiculo:           data.veiculo,
-        placa:             data.placa ?? '',
-        descricao:         data.descricao ?? '',
-        mecanicoPrincipal: (data.mecanicos as { nome: string } | null)?.nome ?? '',
-        mecanicoId:        data.mecanico_id,
-        ajudante:          (data.ajudante as { nome: string } | null)?.nome ?? null,
-        maoDeObra:         Number(data.total_mao_obra),
-        pecas:             Number(data.total_pecas),
-        comissaoMecanico:  Number(data.comissao_mecanico),
-        comissaoAjudante:  Number(data.comissao_ajudante),
-        comissao:          Number(data.comissao),
-        edicoes:           (edicoes ?? []).map(e => ({
+        id:                 data.id,
+        num:                `#${data.num ?? data.id}`,
+        data:               new Date(data.data).toLocaleDateString('pt-BR'),
+        status:             data.status,
+        cliente:            data.cliente,
+        veiculo:            data.veiculo,
+        placa:              data.placa ?? '',
+        descricao:          data.descricao ?? '',
+        mecanicoPrincipal:  (data.mecanicos as { nome: string } | null)?.nome ?? '',
+        mecanicoId:         data.mecanico_id,
+        ajudante:           (data.ajudante as { nome: string } | null)?.nome ?? null,
+        ajudanteId:         data.ajudante_id ?? null,
+        percentualAjudante: Number(data.percentual_ajudante ?? 0),
+        maoDeObra:          Number(data.total_mao_obra),
+        pecas:              Number(data.total_pecas),
+        comissaoMecanico:   Number(data.comissao_mecanico ?? data.comissao),
+        comissaoAjudante:   Number(data.comissao_ajudante ?? 0),
+        comissao:           Number(data.comissao),
+        edicoes:            (edicoes ?? []).map(e => ({
           data:   new Date(e.criado_em).toLocaleString('pt-BR'),
           motivo: e.motivo,
         })),
@@ -103,27 +108,40 @@ export function OsDetalhe() {
     }
   }, [os]);
 
-  const handleEdit = async (e: React.FormEvent) => {
+  const handleEdit = async (e: FormEvent) => {
     e.preventDefault();
     if (motivoEdicao.length < 5) { toast.error('Informe um motivo válido.'); return; }
+    if (novoMaoObra < 0 || novoPecas < 0) { toast.error('Valores não podem ser negativos.'); return; }
     if (!os) return;
     setSaving(true);
     try {
       const mec = mecanicos.find(m => m.id === os.mecanicoId);
-      await editarOS(os.id, novoMaoObra, novoPecas, motivoEdicao, os.mecanicoId, mec?.comissaoPadrao ?? 0);
+      const input: EditarOSInput = {
+        id:                 os.id,
+        maoDeObra:          novoMaoObra,
+        pecas:              novoPecas,
+        motivo:             motivoEdicao,
+        mecanicoId:         os.mecanicoId,
+        comissaoPadrao:     mec?.comissaoPadrao ?? 0,
+        ajudanteId:         os.ajudanteId,
+        percentualAjudante: os.percentualAjudante,
+      };
+      await editarOS(input);
       recarregar();
       toast.success('OS atualizada! Comissão recalculada.');
       setIsEditOpen(false);
       setMotivoEdicao('');
-      // Atualiza local
-      const novaComissao = (novoMaoObra * (mec?.comissaoPadrao ?? 0)) / 100;
+      // Atualiza estado local com os valores recalculados
+      const novaComissaoTotal    = (novoMaoObra * (mec?.comissaoPadrao ?? 0)) / 100;
+      const novaComissaoAjudante = os.ajudanteId ? novaComissaoTotal * (os.percentualAjudante / 100) : 0;
+      const novaComissaoMecanico = novaComissaoTotal - novaComissaoAjudante;
       setOs(prev => prev ? {
         ...prev,
         maoDeObra:        novoMaoObra,
         pecas:            novoPecas,
-        comissao:         novaComissao,
-        comissaoMecanico: novaComissao,
-        comissaoAjudante: 0,
+        comissao:         novaComissaoTotal,
+        comissaoMecanico: novaComissaoMecanico,
+        comissaoAjudante: novaComissaoAjudante,
         edicoes:          [{ data: new Date().toLocaleString('pt-BR'), motivo: motivoEdicao }, ...prev.edicoes],
       } : null);
     } catch {
@@ -173,15 +191,33 @@ export function OsDetalhe() {
               </div>
 
               {/* Prévia do recálculo */}
-              {os && (
-                <div className="bg-primary/10 border border-primary/20 p-3 rounded text-sm space-y-1">
-                  <p className="font-bold text-primary uppercase text-xs">Prévia da nova comissão</p>
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">Nova comissão ({mecanicos.find(m => m.id === os.mecanicoId)?.comissaoPadrao ?? 0}%):</span>
-                    <span className="font-bold">R$ {((novoMaoObra * (mecanicos.find(m => m.id === os.mecanicoId)?.comissaoPadrao ?? 0)) / 100).toFixed(2)}</span>
+              {os && (() => {
+                const pct = mecanicos.find(m => m.id === os.mecanicoId)?.comissaoPadrao ?? 0;
+                const totalComissao    = (novoMaoObra * pct) / 100;
+                const comissaoAjudante = os.ajudanteId ? totalComissao * (os.percentualAjudante / 100) : 0;
+                const comissaoMecanico = totalComissao - comissaoAjudante;
+                return (
+                  <div className="bg-primary/10 border border-primary/20 p-3 rounded text-sm space-y-1">
+                    <p className="font-bold text-primary uppercase text-xs">Prévia da nova comissão</p>
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Comissão total ({pct}%):</span>
+                      <span className="font-bold">R$ {totalComissao.toFixed(2)}</span>
+                    </div>
+                    {os.ajudanteId && (
+                      <>
+                        <div className="flex justify-between text-gray-500">
+                          <span>→ {os.mecanicoPrincipal} ({100 - os.percentualAjudante}%):</span>
+                          <span>R$ {comissaoMecanico.toFixed(2)}</span>
+                        </div>
+                        <div className="flex justify-between text-gray-500">
+                          <span>→ {os.ajudante} ({os.percentualAjudante}%):</span>
+                          <span>R$ {comissaoAjudante.toFixed(2)}</span>
+                        </div>
+                      </>
+                    )}
                   </div>
-                </div>
-              )}
+                );
+              })()}
 
               <div className="space-y-2">
                 <Label>Motivo da Edição <span className="text-red-500">*</span></Label>

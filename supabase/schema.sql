@@ -23,21 +23,25 @@ create table if not exists mecanicos (
 -- ORDENS DE SERVIÇO
 -- ============================================================
 create table if not exists ordens_servico (
-  id              bigint primary key generated always as identity,
-  num             text not null unique,
-  data            date not null default current_date,
-  mecanico_id     bigint not null references mecanicos(id) on delete restrict,
-  cliente         text not null,
-  veiculo         text not null,
-  placa           text not null,
-  descricao       text,
-  total_pecas     numeric(10,2) not null default 0,
-  total_mao_obra  numeric(10,2) not null default 0,
-  comissao        numeric(10,2) not null default 0,
-  status          text not null default 'aberta'
-                    check (status in ('aberta','concluida','paga','em_pendencia','cancelada')),
-  criado_em       timestamptz not null default now(),
-  atualizado_em   timestamptz not null default now()
+  id                  bigint primary key generated always as identity,
+  num                 text not null unique,
+  data                date not null default current_date,
+  mecanico_id         bigint not null references mecanicos(id) on delete restrict,
+  ajudante_id         bigint references mecanicos(id) on delete set null,
+  percentual_ajudante numeric(5,2) not null default 0 check (percentual_ajudante >= 0 and percentual_ajudante <= 100),
+  cliente             text not null,
+  veiculo             text not null,
+  placa               text not null,
+  descricao           text,
+  total_pecas         numeric(10,2) not null default 0 check (total_pecas >= 0),
+  total_mao_obra      numeric(10,2) not null default 0 check (total_mao_obra >= 0),
+  comissao            numeric(10,2) not null default 0 check (comissao >= 0),
+  comissao_mecanico   numeric(10,2) not null default 0 check (comissao_mecanico >= 0),
+  comissao_ajudante   numeric(10,2) not null default 0 check (comissao_ajudante >= 0),
+  status              text not null default 'aberta'
+                        check (status in ('aberta','concluida','paga','em_pendencia','cancelada')),
+  criado_em           timestamptz not null default now(),
+  atualizado_em       timestamptz not null default now()
 );
 
 -- Atualiza timestamp automaticamente
@@ -98,6 +102,18 @@ create table if not exists fechamentos_mensais (
   criado_em       timestamptz not null default now(),
   unique (mecanico_id, mes, ano)
 );
+
+-- ============================================================
+-- ÍNDICES DE PERFORMANCE
+-- ============================================================
+create index if not exists idx_os_mecanico_id  on ordens_servico(mecanico_id);
+create index if not exists idx_os_ajudante_id  on ordens_servico(ajudante_id);
+create index if not exists idx_os_status       on ordens_servico(status);
+create index if not exists idx_os_data         on ordens_servico(data);
+create index if not exists idx_pendencias_os   on pendencias(os_id);
+create index if not exists idx_pendencias_res  on pendencias(resolvida);
+create index if not exists idx_edicoes_os_id   on edicoes_os(os_id);
+create index if not exists idx_fechamentos_mec on fechamentos_mensais(mecanico_id, mes, ano);
 
 -- ============================================================
 -- ROW LEVEL SECURITY (RLS)
