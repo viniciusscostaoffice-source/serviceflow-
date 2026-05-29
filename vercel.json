@@ -3,7 +3,6 @@
   "outputDirectory": "dist",
   "framework": "vite",
   "rewrites": [
-    { "source": "/mecanico/:path*", "destination": "https://serviceflow-mecanico.vercel.app/:path*" },
     { "source": "/(.*)", "destination": "/index.html" }
   ]
 }
