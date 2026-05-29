@@ -157,8 +157,7 @@ export function Mecanicos() {
   const [search, setSearch] = useState('');
   const [confirmExcluir, setConfirmExcluir] = useState<number | null>(null);
 
-  // URL base do app do mecânico — altere após o deploy
-  const APP_MECANICO_URL = 'https://serviceflow.vercel.app/areamec';
+  const APP_MECANICO_URL = 'https://serviceflow-mecanico.vercel.app';
 
   const now = new Date();
   const mes = now.getMonth() + 1;
