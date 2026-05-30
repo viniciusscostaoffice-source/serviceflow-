@@ -1,6 +1,7 @@
 import { useState } from 'react';
-import { Lock, QrCode, Copy, Check, RefreshCw, X, CreditCard, Loader2 } from 'lucide-react';
+import { Lock, QrCode, Copy, Check, RefreshCw, X, CreditCard } from 'lucide-react';
 import { useBilling } from '../lib/useBilling';
+import { CardPaymentBrick } from './CardPaymentBrick';
 
 type PaymentMethod = 'pix' | 'cartao';
 
@@ -135,17 +136,18 @@ function PixModal({
 }
 
 // ──────────────────────────────────────────────
-// Modal Cartão — redireciona para Abacatepay
+// Modal Cartão — Brick do Mercado Pago embutido
 // ──────────────────────────────────────────────
-function CartaoModal({ onClose, onPay, loading, error }: {
+function CartaoModal({ onClose, onSubmitCard, loading, error, amount }: {
   onClose: () => void;
-  onPay: () => void;
+  onSubmitCard: (data: { token: string; installments: number; paymentMethodId: string; issuerId?: string }) => Promise<void>;
   loading: boolean;
   error: string | null;
+  amount: number;
 }) {
   return (
     <div className="fixed inset-0 z-[2000] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
-      <div className="relative w-full max-w-md bg-white shadow-2xl border-4 border-black">
+      <div className="relative w-full max-w-lg bg-white shadow-2xl border-4 border-black">
         <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 bg-[#0A0A0A]">
           <div className="flex items-center gap-3">
             <CreditCard size={22} className="text-primary" />
@@ -156,42 +158,35 @@ function CartaoModal({ onClose, onPay, loading, error }: {
           </button>
         </div>
 
-        <div className="p-8 flex flex-col items-center text-center space-y-5">
-          <div className="w-16 h-16 bg-[#0A0A0A] flex items-center justify-center">
-            <CreditCard size={32} className="text-primary" />
-          </div>
-          <div className="space-y-2">
-            <h3 className="font-display text-2xl text-[#0A0A0A] uppercase">Cartão de Crédito</h3>
-            <p className="text-gray-500 text-sm leading-relaxed">
-              Você será redirecionado para a página segura do Abacatepay para inserir os dados do cartão. Em seguida, volte aqui — o acesso é liberado automaticamente.
-            </p>
-          </div>
-
+        <div className="p-6 space-y-4">
           {error && (
-            <p className="text-red-600 text-sm font-medium w-full text-left bg-red-50 px-3 py-2 border border-red-200">
+            <p className="text-red-600 text-sm font-medium w-full bg-red-50 px-3 py-2 border border-red-200">
               {error}
             </p>
           )}
 
-          <div className="flex flex-col gap-2 w-full">
-            <button
-              onClick={onPay}
-              disabled={loading}
-              className="w-full flex items-center justify-center gap-2 px-6 py-4 bg-primary text-[#0A0A0A] font-display text-lg uppercase hover:bg-[#0A0A0A] hover:text-white transition-colors disabled:opacity-60"
-            >
-              {loading ? <Loader2 size={20} className="animate-spin" /> : <CreditCard size={20} />}
-              {loading ? 'Gerando link...' : 'Ir para pagamento'}
-            </button>
-            <button
-              onClick={onClose}
-              className="w-full px-6 py-3 border-2 border-gray-200 text-gray-500 font-bold text-sm uppercase hover:border-black hover:text-black transition-colors"
-            >
-              Voltar
-            </button>
-          </div>
+          {loading ? (
+            <div className="flex flex-col items-center gap-3 py-8">
+              <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin" />
+              <p className="text-sm text-gray-500">Processando pagamento...</p>
+            </div>
+          ) : (
+            <CardPaymentBrick
+              amount={amount}
+              onSubmit={onSubmitCard}
+              onError={(err) => console.error('[CartaoModal] Brick error:', err)}
+            />
+          )}
 
-          <p className="text-xs text-gray-400 flex items-center gap-1">
-            🔒 Pagamento processado com segurança pelo Abacatepay
+          <button
+            onClick={onClose}
+            className="w-full px-6 py-3 border-2 border-gray-200 text-gray-500 font-bold text-sm uppercase hover:border-black hover:text-black transition-colors"
+          >
+            Voltar
+          </button>
+
+          <p className="text-xs text-gray-400 text-center flex items-center justify-center gap-1">
+            🔒 Pagamento processado com segurança pelo Mercado Pago
           </p>
         </div>
       </div>
@@ -262,7 +257,7 @@ function AccessBlocked({ onSelect, loading, error }: {
         )}
 
         <p className="text-xs text-gray-400">
-          Pagamento 100% seguro via Abacatepay. Dúvidas? Fale conosco no WhatsApp.
+          Pagamento 100% seguro via Mercado Pago. Dúvidas? Fale conosco no WhatsApp.
         </p>
       </div>
     </div>
@@ -286,8 +281,13 @@ export function BillingGate({ children }: { children: React.ReactNode }) {
     setModal(method);
   }
 
-  async function handleCardPay() {
-    await createCard('basico');
+  async function handleCardSubmit(cardData: {
+    token: string;
+    installments: number;
+    paymentMethodId: string;
+    issuerId?: string;
+  }) {
+    await createCard('basico', cardData);
     setModal(null);
   }
 
@@ -333,9 +333,10 @@ export function BillingGate({ children }: { children: React.ReactNode }) {
         {modal === 'cartao' && (
           <CartaoModal
             onClose={handleCloseModal}
-            onPay={handleCardPay}
+            onSubmitCard={handleCardSubmit}
             loading={pixLoading}
             error={pixError}
+            amount={59.00}
           />
         )}
       </>

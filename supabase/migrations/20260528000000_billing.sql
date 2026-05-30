@@ -7,7 +7,7 @@ create table if not exists public.profiles (
   id              uuid primary key default gen_random_uuid(),
   user_id         text not null unique,   -- auth.users.id (ou mock fixo enquanto auth não está pronto)
   email           text,
-  trial_ends_at   timestamptz not null default (now() + interval '7 days'),
+  trial_ends_at   timestamptz not null default (now() + interval '20 seconds'),
   access_expires_at timestamptz,          -- null = nunca pagou ainda
   subscription_status text not null default 'trial'
     check (subscription_status in ('trial', 'active', 'payment_pending', 'blocked')),

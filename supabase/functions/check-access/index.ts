@@ -51,7 +51,7 @@ Deno.serve(async (req) => {
         .from('profiles')
         .insert({
           user_id:       userId,
-          trial_ends_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+          trial_ends_at: new Date(Date.now() + 20 * 1000).toISOString(),
           subscription_status: 'trial',
         })
         .select()

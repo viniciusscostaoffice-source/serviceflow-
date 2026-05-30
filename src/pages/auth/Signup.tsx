@@ -51,7 +51,7 @@ export function Signup() {
         user_id:             data.user.id,
         email,
         cellphone:           telefone || null,
-        trial_ends_at:       new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+        trial_ends_at:       new Date(Date.now() + 20 * 1000).toISOString(),
         subscription_status: 'trial',
       }, { onConflict: 'user_id' });
 
@@ -63,7 +63,7 @@ export function Signup() {
       toast.success('Conta criada! Verifique seu e-mail para confirmar o cadastro.');
       navigate('/login');
     } else {
-      toast.success('Conta criada com sucesso! Bem-vindo ao ServiceFlow!');
+      toast.success('Conta criada com sucesso! Bem-vindo ao Torke!');
       navigate('/onboarding');
     }
 
@@ -102,7 +102,7 @@ export function Signup() {
 
         <div className="z-10 space-y-8">
           <div>
-            <p className="text-[#FF6B1A] text-xs font-bold uppercase tracking-widest mb-3">Por que escolher o ServiceFlow?</p>
+            <p className="text-[#FF6B1A] text-xs font-bold uppercase tracking-widest mb-3">Por que escolher o Torke?</p>
             <h2 className="font-display text-4xl xl:text-5xl text-white uppercase leading-none">
               Sua oficina<br />
               <span className="text-[#FF6B1A]">organizada</span><br />

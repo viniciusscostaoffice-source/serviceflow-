@@ -81,7 +81,13 @@ export function useBilling() {
     }
   }, []);
 
-  const createCard = useCallback(async (plan = 'basico') => {
+  const createCard = useCallback(async (plan = 'basico', cardData?: {
+    token: string;
+    installments: number;
+    paymentMethodId: string;
+    issuerId?: string;
+  }) => {
+    if (!cardData) return;
     setPixLoading(true);
     setPixError(null);
     try {
@@ -92,19 +98,28 @@ export function useBilling() {
           'Content-Type': 'application/json',
           'apikey': import.meta.env.VITE_SUPABASE_ANON_KEY as string,
         },
-        body: JSON.stringify({ user_id: userId, plan }),
+        body: JSON.stringify({
+          user_id:           userId,
+          plan,
+          card_token:        cardData.token,
+          installments:      cardData.installments,
+          payment_method_id: cardData.paymentMethodId,
+          issuer_id:         cardData.issuerId,
+        }),
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error ?? 'Erro ao criar cobrança.');
-      // Redirecionar para a página de pagamento do Abacatepay
-      if (data.checkout_url) window.open(data.checkout_url, '_blank');
+      if (!res.ok) throw new Error(data.error ?? 'Erro ao processar pagamento.');
+      // Pagamento aprovado imediatamente — recarregar acesso
+      if (data.payment_status === 'approved') {
+        await checkAccess();
+      }
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : 'Erro ao gerar pagamento.';
+      const msg = err instanceof Error ? err.message : 'Erro ao processar pagamento.';
       setPixError(msg);
     } finally {
       setPixLoading(false);
     }
-  }, []);
+  }, [checkAccess]);
 
   const createPix = useCallback(async (plan = 'basico') => {
     setPixLoading(true);

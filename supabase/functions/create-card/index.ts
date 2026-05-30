@@ -5,18 +5,18 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-const ABACATE_API = 'https://api.abacatepay.com/v2';
-
-const PRODUCT_IDS: Record<string, string> = {
-  basico:       'prod_UPqjur4y1GE6jUbp4EJPrF1M',
-  profissional: 'prod_LDrpyjZ3c5gA61CRmWLuBusR',
-  premium:      'prod_JDj0utqUSN6ck1s2wnHE02eH',
-};
+const MP_API = 'https://api.mercadopago.com';
 
 const PLAN_PRICES: Record<string, number> = {
-  basico:       5900,
-  profissional: 8000,
-  premium:      12000,
+  basico:       59.00,
+  profissional: 80.00,
+  premium:      120.00,
+};
+
+const PLAN_LABELS: Record<string, string> = {
+  basico:       'Plano Básico — ServiceFlow',
+  profissional: 'Plano Profissional — ServiceFlow',
+  premium:      'Plano Premium — ServiceFlow',
 };
 
 Deno.serve(async (req) => {
@@ -31,10 +31,23 @@ Deno.serve(async (req) => {
     );
 
     const body = await req.json();
-    const userId: string = body.user_id ?? 'demo-user-001';
-    const planName: string = body.plan ?? 'basico';
-    const amount = PLAN_PRICES[planName] ?? 5900;
-    const productId = PRODUCT_IDS[planName] ?? PRODUCT_IDS.basico;
+    const userId: string       = body.user_id;
+    const planName: string     = body.plan ?? 'basico';
+    const cardToken: string    = body.card_token;       // token gerado pelo Brick
+    const installments: number = body.installments ?? 1;
+    const paymentMethodId: string = body.payment_method_id; // ex: "visa", "master"
+    const issuerId: string | undefined = body.issuer_id;
+
+    if (!userId || !cardToken || !paymentMethodId) {
+      return new Response(JSON.stringify({ error: 'Parâmetros obrigatórios ausentes.' }), {
+        status: 400,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    const unitPrice  = PLAN_PRICES[planName] ?? 59.00;
+    const amountCents = Math.round(unitPrice * 100);
+    const label      = PLAN_LABELS[planName] ?? PLAN_LABELS.basico;
 
     const { data: profile } = await supabase
       .from('profiles')
@@ -49,84 +62,94 @@ Deno.serve(async (req) => {
       });
     }
 
-    let customerName = 'Cliente ServiceFlow';
+    let customerName  = 'Cliente ServiceFlow';
+    let customerEmail = profile.email ?? 'cliente@serviceflow.com.br';
+    let customerCpf   = (profile.tax_id ?? '').replace(/\D/g, '') || '00000000000';
     try {
       const { data: authUser } = await supabase.auth.admin.getUserById(userId);
-      if (authUser?.user?.user_metadata?.nome) {
-        customerName = authUser.user.user_metadata.nome;
-      }
+      if (authUser?.user?.user_metadata?.nome) customerName = authUser.user.user_metadata.nome;
+      if (authUser?.user?.email) customerEmail = authUser.user.email;
     } catch (_) { /* fallback */ }
 
-    const abacateToken = Deno.env.get('ABACATEPAY_API_KEY');
-    if (!abacateToken) throw new Error('ABACATEPAY_API_KEY não configurado.');
+    const mpToken = Deno.env.get('MERCADOPAGO_ACCESS_TOKEN');
+    if (!mpToken) throw new Error('MERCADOPAGO_ACCESS_TOKEN não configurado.');
 
-    const appUrl = Deno.env.get('APP_URL') ?? 'https://app.serviceflow.com.br';
+    const [firstName, ...rest] = customerName.trim().split(' ');
+    const lastName = rest.join(' ') || firstName;
 
-    const checkoutPayload = {
-      methods: ['CARD'],
-      items: [{ id: productId, quantity: 1 }],
-      returnUrl:     `${appUrl}/dashboard?payment=success`,
-      completionUrl: `${appUrl}/dashboard?payment=success`,
-      customer: {
-        name:      customerName,
-        email:     profile.email ?? 'cliente@serviceflow.com.br',
-        cellphone: profile.cellphone ?? '11999999999',
-        taxId:     profile.tax_id ?? '11144477735',
+    const paymentPayload: Record<string, unknown> = {
+      transaction_amount: unitPrice,
+      token:              cardToken,
+      description:        label,
+      installments,
+      payment_method_id:  paymentMethodId,
+      payer: {
+        email:      customerEmail,
+        first_name: firstName,
+        last_name:  lastName,
+        identification: {
+          type:   'CPF',
+          number: customerCpf,
+        },
       },
       metadata: { user_id: userId, plan: planName },
     };
 
-    console.log('[create-card] Enviando para Abacatepay:', JSON.stringify(checkoutPayload));
+    if (issuerId) paymentPayload.issuer_id = issuerId;
 
-    const abacateResponse = await fetch(`${ABACATE_API}/checkouts/create`, {
+    console.log('[create-card] Enviando para Mercado Pago:', JSON.stringify(paymentPayload));
+
+    const mpResponse = await fetch(`${MP_API}/v1/payments`, {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${abacateToken}`,
-        'Content-Type':  'application/json',
+        'Authorization':     `Bearer ${mpToken}`,
+        'Content-Type':      'application/json',
+        'X-Idempotency-Key': `card-${userId}-${planName}-${Date.now()}`,
       },
-      body: JSON.stringify(checkoutPayload),
+      body: JSON.stringify(paymentPayload),
     });
 
-    const responseText = await abacateResponse.text();
-    console.log('[create-card] Abacatepay status:', abacateResponse.status, '| body:', responseText);
+    const responseText = await mpResponse.text();
+    console.log('[create-card] MP status:', mpResponse.status, '| body:', responseText.slice(0, 400));
 
-    if (!abacateResponse.ok) {
-      return new Response(JSON.stringify({ error: `Abacatepay ${abacateResponse.status}: ${responseText}` }), {
+    if (!mpResponse.ok) {
+      return new Response(JSON.stringify({ error: `MercadoPago ${mpResponse.status}: ${responseText}` }), {
         status: 502,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
 
-    const abacateData = JSON.parse(responseText);
-
-    if (!abacateData.success || !abacateData.data) {
-      return new Response(JSON.stringify({ error: `Abacatepay: ${abacateData.error ?? 'resposta inválida'}` }), {
-        status: 502,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
-    }
-
-    const checkout = abacateData.data;
+    const mpData = JSON.parse(responseText);
+    const status: string = mpData.status; // approved | in_process | rejected
 
     await supabase.from('invoices').insert({
       user_id:            userId,
-      amount,
+      amount:             amountCents,
       plan_name:          planName,
-      status:             'pending',
-      abacate_payment_id: checkout.id,
-      ticket_url:         checkout.url,
+      status:             status === 'approved' ? 'paid' : 'pending',
+      abacate_payment_id: String(mpData.id),
+      ticket_url:         null,
       expires_at:         null,
+      paid_at:            status === 'approved' ? new Date().toISOString() : null,
     });
 
-    await supabase
-      .from('profiles')
-      .update({ subscription_status: 'payment_pending' })
-      .eq('user_id', userId);
+    if (status === 'approved') {
+      const accessExpiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
+      await supabase
+        .from('profiles')
+        .update({ subscription_status: 'active', access_expires_at: accessExpiresAt.toISOString() })
+        .eq('user_id', userId);
+    } else {
+      await supabase
+        .from('profiles')
+        .update({ subscription_status: 'payment_pending' })
+        .eq('user_id', userId);
+    }
 
-    console.log(`[create-card] ✅ Checkout cartão criado: ${checkout.id} | URL: ${checkout.url}`);
+    console.log(`[create-card] ✅ Pagamento ${mpData.id} | status: ${status}`);
 
     return new Response(
-      JSON.stringify({ checkout_url: checkout.url }),
+      JSON.stringify({ payment_status: status, payment_id: mpData.id }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
     );
   } catch (err) {
