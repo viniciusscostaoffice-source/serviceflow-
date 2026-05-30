@@ -4,18 +4,18 @@ import { ScrollReveal } from '../ScrollReveal';
 const painPoints = [
   {
     icon: Flame,
-    title: "Final do mês é guerra",
-    description: "Mecânico desconfia do número, dono perde tempo refazendo cálculo, briga toda vez."
+    title: "Todo dia 30 vira uma bomba",
+    description: "Mecânico chega com a conta dele, você chega com a sua. Os números não batem. A discussão começa. O mês termina mal — de novo."
   },
   {
     icon: FileSpreadsheet,
-    title: "Planilha bagunçada",
-    description: "Excel que ninguém entende, fórmula quebrada, histórico que some quando precisa."
+    title: "A planilha que só você entende",
+    description: "Fórmula quebrada, coluna errada, versão antiga salva por cima da certa. Um dia você vai perder dados de um mês inteiro."
   },
   {
     icon: UserMinus,
-    title: "Mecânico bom indo embora",
-    description: "Sem transparência, profissional bom procura oficina que paga com clareza."
+    title: "Seu melhor mecânico já está de olho em outra oficina",
+    description: "Profissional bom não aguenta trabalhar no escuro. Se ele não confia no que vai receber, vai embora — e leva a clientela junto."
   }
 ];
 
@@ -26,7 +26,7 @@ export function PainPoints() {
         <ScrollReveal direction="up" duration={600}>
           <div className="text-center mb-16">
             <h2 className="font-display text-4xl sm:text-5xl md:text-6xl text-secondary">
-              Você reconhece essa cena?
+              Se você tem oficina, já viveu isso.
             </h2>
           </div>
         </ScrollReveal>

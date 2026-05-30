@@ -4,23 +4,23 @@ import { ScrollReveal } from '../ScrollReveal';
 const diffs = [
   {
     icon: Smartphone,
-    title: "App do Mecânico no bolso",
-    description: "App separado pro mecânico acompanhar comissão em tempo real, direto no celular."
+    title: "O mecânico vê tudo no celular — sem precisar perguntar",
+    description: "App próprio pro mecânico: ele abre, vê cada OS, vê o valor da comissão, vê o total do mês. A dúvida some antes de virar briga."
   },
   {
     icon: History,
-    title: "Edição com rastro",
-    description: "Toda alteração fica registrada. Acabou desconfiança. O histórico prova tudo."
+    title: "Qualquer alteração fica registrada para sempre",
+    description: "Mudou um valor? Corrigiu uma OS? O sistema guarda quem fez, quando fez e o que era antes. Ninguém pode dizer que foi manipulado."
   },
   {
     icon: FileText,
-    title: "Fechamento mensal com PDF",
-    description: "Gere relatório de comissões por mecânico com um clique e exporte em PDF."
+    title: "Fechamento em um clique, PDF na mão",
+    description: "No fim do mês, gere o relatório de comissões por mecânico em segundos. Assina, entrega, acabou. Sem retrabalho."
   },
   {
     icon: Blocks,
-    title: "Você continua com seu sistema atual",
-    description: "Não precisa trocar de ERP. Funciona como um complemento perfeito pro que você já usa."
+    title: "Funciona junto com o que você já usa",
+    description: "Não precisa trocar de sistema. O ServiceFlow entra como um complemento — você lança as OSs aqui e continua com seu ERP normalmente."
   }
 ];
 
@@ -36,7 +36,7 @@ export function Differentials() {
         <ScrollReveal direction="up" duration={600}>
           <div className="text-center mb-16">
             <h2 className="font-display text-4xl sm:text-5xl md:text-6xl uppercase">
-              Por que ServiceFlow Oficina é diferente
+              Feito para oficina. Não adaptado.
             </h2>
           </div>
         </ScrollReveal>
