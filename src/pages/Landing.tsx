@@ -11,8 +11,8 @@ import { Footer } from '../components/Footer';
 import { FloatingWhatsApp } from '../components/FloatingWhatsApp';
 import { LeadModal } from '../components/LeadModal';
 import { Tracking } from '../components/Tracking';
-import { ProgressiveBlur } from '../components/ProgressiveBlur';
 import { Navbar } from '../components/Navbar';
+import { CursorGlow } from '../components/CursorGlow';
 
 export function Landing() {
   const [isLeadModalOpen, setIsLeadModalOpen] = useState(false);
@@ -20,6 +20,7 @@ export function Landing() {
   return (
     <div className="min-h-screen bg-secondary text-offwhite font-sans selection:bg-primary selection:text-secondary">
       <Tracking />
+      <CursorGlow />
       <Navbar />
       <Hero onOpenModal={() => setIsLeadModalOpen(true)} />
       <div id="como-funciona"><PainPoints /></div>
@@ -32,7 +33,6 @@ export function Landing() {
       <Footer />
       <FloatingWhatsApp />
       <LeadModal isOpen={isLeadModalOpen} onClose={() => setIsLeadModalOpen(false)} />
-      <ProgressiveBlur />
     </div>
   );
 }

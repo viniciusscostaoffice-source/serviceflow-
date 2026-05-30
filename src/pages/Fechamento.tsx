@@ -172,7 +172,7 @@ const STATUS_BADGE: Record<string, React.ReactElement> = {
 
 // ─── Export PDF ──────────────────────────────────────────────────────────────
 
-function exportarPDF(lista: OS[], mecNome: string, periodo: string, mecId: number, oficina = 'ServiceFlow Oficina') {
+function exportarPDF(lista: OS[], mecNome: string, periodo: string, mecId: number, oficina = 'Torke Oficina') {
   const ativas = lista.filter((os) => os.status !== 'cancelada');
   const resumo = calcularResumo(lista, mecId);
   const geradoEm = new Date().toLocaleString('pt-BR');
@@ -188,7 +188,7 @@ function exportarPDF(lista: OS[], mecNome: string, periodo: string, mecId: numbe
   doc.setFontSize(20);
   doc.setFont('helvetica', 'bold');
   doc.setTextColor(255, 107, 26); // #FF6B1A
-  doc.text('SERVICEFLOW', 14, 15);
+  doc.text('TORKE', 14, 15);
 
   doc.setFontSize(9);
   doc.setFont('helvetica', 'normal');
@@ -301,7 +301,7 @@ function exportarPDF(lista: OS[], mecNome: string, periodo: string, mecId: numbe
       doc.setFont('helvetica', 'normal');
       doc.setTextColor(180, 180, 180);
       doc.text(
-        `ServiceFlow Oficina · ${mecNome} · ${periodo}`,
+        `Torke Oficina · ${mecNome} · ${periodo}`,
         14,
         pageH - 8,
       );

@@ -1,4 +1,5 @@
 import { Flame, FileSpreadsheet, UserMinus } from 'lucide-react';
+import { motion } from 'motion/react';
 import { ScrollReveal } from '../ScrollReveal';
 
 const painPoints = [
@@ -34,15 +35,23 @@ export function PainPoints() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           {painPoints.map((point, index) => (
             <ScrollReveal key={index} direction="up" delay={index * 150} duration={600}>
-              <div className="bg-white p-8 border border-gray-200 shadow-sm hover:shadow-md transition-shadow h-full">
-                <div className="w-14 h-14 bg-red-100 flex items-center justify-center rounded-lg mb-6 text-red-600">
+              <motion.div
+                whileHover={{ y: -8 }}
+                transition={{ type: 'spring', stiffness: 250, damping: 25 }}
+                className="bg-white p-8 border border-gray-200 shadow-sm hover:shadow-xl hover:border-red-200 transition-[box-shadow,border-color] duration-300 h-full group"
+              >
+                <motion.div
+                  className="w-14 h-14 bg-red-100 flex items-center justify-center rounded-lg mb-6 text-red-600 group-hover:bg-red-600 group-hover:text-white transition-colors duration-300"
+                  whileHover={{ scale: 1.1, rotate: [0, -8, 8, 0] }}
+                  transition={{ duration: 0.4 }}
+                >
                   <point.icon size={32} />
-                </div>
+                </motion.div>
                 <h3 className="font-display text-2xl mb-4 text-secondary">{point.title}</h3>
                 <p className="text-gray-600 leading-relaxed text-lg">
                   {point.description}
                 </p>
-              </div>
+              </motion.div>
             </ScrollReveal>
           ))}
         </div>

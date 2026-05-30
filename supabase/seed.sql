@@ -2,7 +2,7 @@
 
 -- 1. Create a dummy oficina
 INSERT INTO oficinas (id, nome, cnpj, telefone, endereco) VALUES
-('b303e002-6c17-4ef6-bb4d-17e9f36fcc1e', 'ServiceFlow Auto Center', '12.345.678/0001-90', '(11) 9999-8888', 'Av. das Nações, 1000 - São Paulo, SP');
+('b303e002-6c17-4ef6-bb4d-17e9f36fcc1e', 'Torke Auto Center', '12.345.678/0001-90', '(11) 9999-8888', 'Av. das Nações, 1000 - São Paulo, SP');
 
 -- 2. Create mock mechanics
 INSERT INTO mecanicos (id, oficina_id, nome, telefone, comissao_padrao, status) VALUES

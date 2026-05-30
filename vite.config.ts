@@ -13,8 +13,8 @@ export default defineConfig(() => {
         registerType: 'autoUpdate',
         includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'icons/*.png'],
         manifest: {
-          name: 'ServiceFlow Oficina',
-          short_name: 'ServiceFlow',
+          name: 'Torke Oficina',
+          short_name: 'Torke',
           description: 'Gestão de ordens de serviço e comissões para oficinas',
           theme_color: '#FF6B1A',
           background_color: '#F5F5F0',

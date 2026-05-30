@@ -58,8 +58,8 @@ export function Onboarding() {
       if (foneMec) {
         const phone = foneMec.replace(/\D/g, '');
         const msg = encodeURIComponent(
-          `Olá ${nomeMec.split(' ')[0]}! 👋\n\nVocê foi adicionado à equipe no *ServiceFlow Oficina*.\n\n` +
-          `📱 Acesse o app:\nhttps://serviceflow-mecanico.vercel.app/criar-senha?nome=${encodeURIComponent(nomeMec)}\n\n` +
+          `Olá ${nomeMec.split(' ')[0]}! 👋\n\nVocê foi adicionado à equipe no *Torke Oficina*.\n\n` +
+          `📱 Acesse o app:\nhttps://torkemecanico.vercel.app/criar-senha?nome=${encodeURIComponent(nomeMec)}\n\n` +
           `📞 Login: seu número de celular`
         );
         window.open(`https://wa.me/55${phone}?text=${msg}`, '_blank');
@@ -108,7 +108,7 @@ export function Onboarding() {
               <div className="mx-auto w-16 h-16 bg-primary/10 text-primary rounded-full flex items-center justify-center mb-4">
                 <Factory size={32} />
               </div>
-              <CardTitle className="font-display text-3xl uppercase">Bem-vindo ao ServiceFlow</CardTitle>
+              <CardTitle className="font-display text-3xl uppercase">Bem-vindo ao Torke</CardTitle>
               <CardDescription className="text-base text-gray-600">Vamos configurar sua oficina em 3 passos rápidos.</CardDescription>
             </CardHeader>
             <CardContent>

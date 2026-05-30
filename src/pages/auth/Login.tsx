@@ -63,7 +63,7 @@ export function Login() {
             <Wrench size={22} className="text-white" />
           </div>
           <span className="font-display text-2xl tracking-widest uppercase text-white">
-            Service<span className="text-[#FF6B1A]">Flow</span>
+            Tor<span className="text-[#FF6B1A]">ke</span>
           </span>
         </Link>
 
@@ -93,7 +93,7 @@ export function Login() {
             ))}
           </div>
           <p className="text-gray-500 text-sm">
-            <span className="text-white font-semibold">+200 oficinas</span> já usam o ServiceFlow
+            <span className="text-white font-semibold">+200 oficinas</span> já usam o Torke
           </p>
         </div>
       </div>
@@ -105,7 +105,7 @@ export function Login() {
             <Wrench size={18} className="text-white" />
           </div>
           <span className="font-display text-2xl tracking-widest uppercase text-[#0A0A0A]">
-            Service<span className="text-[#FF6B1A]">Flow</span>
+            Tor<span className="text-[#FF6B1A]">ke</span>
           </span>
         </Link>
 

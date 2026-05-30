@@ -77,7 +77,7 @@ export function DashboardLayout() {
       >
         <div className="h-16 flex items-center px-6 border-b border-gray-800 shrink-0">
           <Link to="/dashboard" className="font-display tracking-wider text-xl uppercase">
-            Service<span className="text-[#FF6B1A]">Flow</span>
+            Tor<span className="text-[#FF6B1A]">ke</span>
           </Link>
           <button onClick={() => setSidebarOpen(false)} className="ml-auto text-gray-400 md:hidden">
             <X size={20} />

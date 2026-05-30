@@ -56,7 +56,7 @@ export function Navbar() {
               </div>
               <div className="flex flex-col leading-none">
                 <span className="font-display text-lg text-offwhite tracking-tight">
-                  Service<span className="text-primary">Flow</span>
+                  Tor<span className="text-primary">ke</span>
                 </span>
                 <span className="text-[10px] text-gray-500 tracking-wide hidden sm:block">
                   comissão sem briga

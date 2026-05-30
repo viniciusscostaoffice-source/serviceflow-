@@ -1,5 +1,5 @@
 -- ============================================================
--- ServiceFlow Oficina — Schema completo
+-- Torke Oficina — Schema completo
 -- Execute no Supabase: SQL Editor → New Query → Run
 -- ============================================================
 

@@ -1,5 +1,6 @@
 import { Check, ArrowRight, Gift } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { motion } from 'motion/react';
 import { ScrollReveal } from '../ScrollReveal';
 
 const plans = [
@@ -72,7 +73,7 @@ export function Pricing() {
           <div className="flex items-center justify-center gap-2 mb-16">
             <div className="inline-flex items-center gap-2 px-5 py-2.5 bg-primary/10 border border-primary/30 rounded-full">
               <Gift size={18} className="text-primary" />
-              <span className="text-primary font-bold text-sm uppercase tracking-wider">7 dias grátis em todos os planos — sem cartão agora</span>
+              <span className="text-primary font-bold text-sm uppercase tracking-wider">7 dias grátis em todos os planos — sem cartão</span>
             </div>
           </div>
         </ScrollReveal>
@@ -80,17 +81,36 @@ export function Pricing() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 lg:gap-8 items-start">
           {plans.map((plan, index) => (
             <ScrollReveal key={plan.name} direction="up" delay={index * 150} duration={700}>
-              <div
+              <motion.div
+                whileHover={{ y: -10, scale: 1.02 }}
+                animate={plan.highlight ? { y: [0, -8, 0] } : undefined}
+                transition={
+                  plan.highlight
+                    ? { y: { duration: 4, repeat: Infinity, ease: 'easeInOut' }, scale: { type: 'spring', stiffness: 250, damping: 25 } }
+                    : { type: 'spring', stiffness: 250, damping: 25 }
+                }
                 className={`relative flex flex-col h-full ${
                   plan.highlight
-                    ? 'bg-[#1A1A1A] border-4 border-primary shadow-[0_0_40px_rgba(255,107,26,0.2)]'
+                    ? 'bg-[#1A1A1A] border-4 border-primary'
                     : 'bg-[#141414] border border-gray-700'
                 }`}
               >
+                {/* Glow pulsante atrás do card destaque */}
+                {plan.highlight && (
+                  <motion.div
+                    className="absolute -inset-1 bg-primary/30 blur-2xl -z-10 rounded-lg pointer-events-none"
+                    animate={{ opacity: [0.3, 0.6, 0.3] }}
+                    transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
+                  />
+                )}
                 {plan.badge && (
-                  <div className="absolute top-0 right-0 bg-primary text-secondary font-bold text-xs uppercase px-3 py-1 -mt-4 mr-4">
+                  <motion.div
+                    className="absolute top-0 right-0 bg-primary text-secondary font-bold text-xs uppercase px-3 py-1 -mt-4 mr-4 z-10"
+                    animate={{ scale: [1, 1.08, 1] }}
+                    transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
+                  >
                     {plan.badge}
-                  </div>
+                  </motion.div>
                 )}
 
                 <div className="p-8 sm:p-10 flex flex-col flex-1">
@@ -106,7 +126,7 @@ export function Pricing() {
                   </div>
 
                   <div className="my-5 py-2 px-3 bg-primary/10 border-l-2 border-primary text-primary text-xs font-bold uppercase tracking-wide">
-                    🎁 7 dias grátis — cancele antes, não paga nada
+                    🎁 7 dias grátis — só paga se decidir continuar
                   </div>
 
                   <div className="space-y-3 mb-10 flex-1">
@@ -123,24 +143,25 @@ export function Pricing() {
 
                   <Link
                     to="/signup"
-                    className={`w-full block text-center px-6 py-4 font-display text-lg transition-colors duration-300 flex items-center justify-center gap-2 cursor-pointer ${
+                    className={`relative w-full block text-center px-6 py-4 font-display text-lg transition-colors duration-300 flex items-center justify-center gap-2 cursor-pointer overflow-hidden group/btn ${
                       plan.highlight
                         ? 'bg-primary text-secondary hover:bg-white hover:text-black'
                         : 'bg-gray-800 text-white hover:bg-primary hover:text-secondary border border-gray-600'
                     }`}
                   >
+                    <span className="absolute inset-0 -translate-x-full group-hover/btn:translate-x-full transition-transform duration-700 bg-gradient-to-r from-transparent via-white/20 to-transparent skew-x-12" />
                     {plan.cta}
                     <ArrowRight size={20} />
                   </Link>
                 </div>
-              </div>
+              </motion.div>
             </ScrollReveal>
           ))}
         </div>
 
         <ScrollReveal direction="up" delay={500} duration={600}>
           <p className="text-center text-xs text-gray-600 mt-10">
-            🔒 Sem cobrança nos primeiros 7 dias. Cancele quando quiser. Garantia incondicional de 30 dias.
+            🔒 7 dias grátis sem cartão. Você só paga se escolher um plano. Cancele quando quiser.
           </p>
         </ScrollReveal>
       </div>

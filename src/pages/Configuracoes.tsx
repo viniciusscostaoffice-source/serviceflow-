@@ -302,7 +302,7 @@ export function Configuracoes() {
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="p-4 bg-primary/10 rounded-lg border border-primary/20">
-                <p className="text-primary font-bold text-lg uppercase tracking-wider">ServiceFlow Pro</p>
+                <p className="text-primary font-bold text-lg uppercase tracking-wider">Torke Pro</p>
                 <p className="text-sm text-gray-600 mt-1">Mecânicos ilimitados · Relatórios avançados</p>
               </div>
               <Button variant="outline" className="w-full" onClick={() => setShowAssinatura(true)}>

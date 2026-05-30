@@ -6,7 +6,7 @@ import { ScrollReveal } from '../ScrollReveal';
 const faqs = [
   {
     q: "Os 7 dias grátis são de verdade? Preciso colocar cartão?",
-    a: "Sim, são de verdade. Você informa o cartão no cadastro, mas não é cobrado nada nos primeiros 7 dias. Se cancelar antes, não paga absolutamente nada."
+    a: "São de verdade e você não precisa colocar cartão pra começar. É só criar a conta e usar. Se gostar, escolhe um plano depois dos 7 dias. Se não, não paga nada e nem precisa cancelar."
   },
   {
     q: "Qual plano eu devo escolher?",
@@ -14,11 +14,11 @@ const faqs = [
   },
   {
     q: "Preciso trocar meu sistema atual?",
-    a: "Não. O ServiceFlow Oficina trabalha junto com qualquer ERP que você já usa. É focado exclusivamente na gestão de comissões dos mecânicos."
+    a: "Não. O Torke Oficina trabalha junto com qualquer ERP que você já usa. É focado exclusivamente na gestão de comissões dos mecânicos."
   },
   {
     q: "E se eu não gostar após os 7 dias?",
-    a: "Garantia incondicional de 30 dias após o início da cobrança. Se não resolver seu problema, devolvemos 100% e continuamos amigos."
+    a: "Sem problema e sem pegadinha. Você só vira assinante se escolher um plano por conta própria. Se não gostar, é só não assinar — você não paga nada e não fica preso a nada."
   },
   {
     q: "Funciona em quantas oficinas?",
@@ -53,16 +53,19 @@ export function FAQ() {
             const isOpen = openIndex === index;
             return (
               <ScrollReveal key={index} direction="up" delay={index * 60} duration={500}>
-                <div className="border border-gray-300 bg-white">
+                <div className={`border bg-white transition-colors duration-300 ${isOpen ? 'border-primary shadow-[0_0_0_1px_rgba(255,107,26,0.4)]' : 'border-gray-300'}`}>
                   <button
                     onClick={() => setOpenIndex(isOpen ? null : index)}
-                    className="w-full px-6 py-5 flex justify-between items-center text-left hover:bg-gray-50 transition-colors"
+                    className="w-full px-6 py-5 flex justify-between items-center text-left hover:bg-primary/5 transition-colors gap-4"
                   >
-                    <span className="font-display text-xl text-secondary">{faq.q}</span>
-                    <ChevronDown
-                      size={24}
-                      className={`text-primary transition-transform duration-300 ${isOpen ? 'rotate-180' : ''}`}
-                    />
+                    <span className={`font-display text-xl transition-colors ${isOpen ? 'text-primary' : 'text-secondary'}`}>{faq.q}</span>
+                    <motion.div
+                      animate={{ rotate: isOpen ? 180 : 0, scale: isOpen ? 1.15 : 1 }}
+                      transition={{ duration: 0.3 }}
+                      className="text-primary flex-shrink-0"
+                    >
+                      <ChevronDown size={24} />
+                    </motion.div>
                   </button>
                   <AnimatePresence>
                     {isOpen && (

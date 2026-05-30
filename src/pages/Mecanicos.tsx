@@ -160,7 +160,7 @@ export function Mecanicos() {
   const [search, setSearch] = useState('');
   const [confirmExcluir, setConfirmExcluir] = useState<number | null>(null);
 
-  const APP_MECANICO_URL = 'https://serviceflow-mecanico.vercel.app';
+  const APP_MECANICO_URL = 'https://torkemecanico.vercel.app';
 
   const now = new Date();
   const mes = now.getMonth() + 1;
@@ -188,7 +188,7 @@ export function Mecanicos() {
       const primeiroNome = inviteName.split(' ')[0];
       const linkAcesso = `${APP_MECANICO_URL}/criar-senha?nome=${encodeURIComponent(inviteName)}`;
       const msg = encodeURIComponent(
-        `Olá ${primeiroNome}! 👋\n\nVocê foi adicionado à equipe no *ServiceFlow Oficina*.\n\n` +
+        `Olá ${primeiroNome}! 👋\n\nVocê foi adicionado à equipe no *Torke Oficina*.\n\n` +
         `📱 Acesse o app pelo link abaixo e crie sua senha:\n${linkAcesso}\n\n` +
         `📞 Login: seu número de celular\n` +
         `🔑 Crie sua senha no primeiro acesso\n\n` +
@@ -220,7 +220,7 @@ export function Mecanicos() {
     const primeiroNome = mec.nome.split(' ')[0];
     const linkAcesso = `${APP_MECANICO_URL}/criar-senha?nome=${encodeURIComponent(mec.nome)}`;
     const msg = encodeURIComponent(
-      `Olá ${primeiroNome}! 👋\n\nAqui está seu link de acesso ao *ServiceFlow Oficina*:\n${linkAcesso}\n\n` +
+      `Olá ${primeiroNome}! 👋\n\nAqui está seu link de acesso ao *Torke Oficina*:\n${linkAcesso}\n\n` +
       `📞 Login: seu número de celular`
     );
     window.open(`https://wa.me/55${phone}?text=${msg}`, '_blank');

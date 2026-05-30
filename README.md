@@ -1,6 +1,6 @@
-# ServiceFlow Oficina - Painel do Gerente e Landing Page
+# Torke Oficina - Painel do Gerente e Landing Page
 
-Landing page e Painel Administrativo ("Web do Gerente") do micro-SaaS ServiceFlow Oficina, focado no controle de comissão de mecânicos. 
+Landing page e Painel Administrativo ("Web do Gerente") do micro-SaaS Torke Oficina, focado no controle de comissão de mecânicos. 
 Projeto desenvolvido em React (Vite) + Tailwind CSS + Supabase + React Router.
 
 ## Funcionalidades

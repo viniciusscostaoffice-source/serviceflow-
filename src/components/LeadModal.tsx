@@ -34,7 +34,7 @@ export function LeadModal({ isOpen, onClose }: LeadModalProps) {
           body: JSON.stringify({
             name,
             whatsapp,
-            source: 'Landing Page ServiceFlow - Quero Saber Mais',
+            source: 'Landing Page Torke - Quero Saber Mais',
             timestamp: new Date().toISOString()
           })
         });
